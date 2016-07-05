@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -72,71 +71,118 @@ public class SANetwork {
                 String response;
                 InputStreamReader in;
                 OutputStream os = null;
-                URLConnection conn;
 
                 // get the Url
                 URL Url = new URL(endpoint);
                 String proto = Url.getProtocol();
 
-                // open connection
                 if (proto.equals("https")) {
-                    conn = (HttpsURLConnection)Url.openConnection();
+                    HttpsURLConnection conn = (HttpsURLConnection)Url.openConnection();
+                    conn.setReadTimeout(15000);
+                    conn.setConnectTimeout(15000);
+                    conn.setUseCaches(false);
+                    conn.setDoInput(true);
+                    conn.setRequestMethod(method);
+
+                    // set headers
+                    Iterator<String> keys = header.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        String value = header.optString(key);
+                        conn.setRequestProperty(key, value);
+                    }
+
+                    // connect
+                    conn.connect();
+
+                    // write body
+                    if (method.equals("POST")) {
+                        conn.setDoOutput(true);
+                        String message = body.toString();
+                        os = new BufferedOutputStream(conn.getOutputStream());
+                        os.write(message.getBytes());
+                        os.flush();
+                    }
+
+                    // read the result
+                    statusCode = conn.getResponseCode();
+                    if(statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
+                        in = new InputStreamReader(conn.getErrorStream());
+                    } else {
+                        in = new InputStreamReader(conn.getInputStream());
+                    }
+
+                    // get response
+                    String line;
+                    response = "";
+                    BufferedReader reader = new BufferedReader(in);
+                    while ((line = reader.readLine()) != null) {
+                        response+=line;
+                    }
+
+                    // close the body writer
+                    if (os != null) {
+                        os.close();
+                    }
+                    // close the reader
+                    in.close();
+
+                    // disconnect
+                    conn.disconnect();
                 } else {
-                    conn = (HttpURLConnection)Url.openConnection();
+                    HttpURLConnection conn = (HttpURLConnection)Url.openConnection();
+                    conn.setReadTimeout(15000);
+                    conn.setConnectTimeout(15000);
+                    conn.setUseCaches(false);
+                    conn.setDoInput(true);
+                    conn.setRequestMethod(method);
+
+                    // set headers
+                    Iterator<String> keys = header.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        String value = header.optString(key);
+                        conn.setRequestProperty(key, value);
+                    }
+
+                    // connect
+                    conn.connect();
+
+                    // write body
+                    if (method.equals("POST")) {
+                        conn.setDoOutput(true);
+                        String message = body.toString();
+                        os = new BufferedOutputStream(conn.getOutputStream());
+                        os.write(message.getBytes());
+                        os.flush();
+                    }
+
+                    // read the result
+                    statusCode = conn.getResponseCode();
+                    if(statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
+                        in = new InputStreamReader(conn.getErrorStream());
+                    } else {
+                        in = new InputStreamReader(conn.getInputStream());
+                    }
+
+                    // get response
+                    String line;
+                    response = "";
+                    BufferedReader reader = new BufferedReader(in);
+                    while ((line = reader.readLine()) != null) {
+                        response+=line;
+                    }
+
+                    // close the body writer
+                    if (os != null) {
+                        os.close();
+                    }
+                    // close the reader
+                    in.close();
+
+                    // disconnect
+                    conn.disconnect();
                 }
-
-                // set properties
-                conn.setReadTimeout(15000);
-                conn.setConnectTimeout(15000);
-                conn.setUseCaches(false);
-                conn.setDoInput(true);
-                ((HttpURLConnection)conn).setRequestMethod(method);
-
-                // set headers
-                Iterator<String> keys = header.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    String value = header.optString(key);
-                    conn.setRequestProperty(key, value);
-                }
-
-                // connect
-                conn.connect();
-
-                // write body
-                if (method.equals("POST")) {
-                    conn.setDoOutput(true);
-                    String message = body.toString();
-                    os = new BufferedOutputStream(conn.getOutputStream());
-                    os.write(message.getBytes());
-                    os.flush();
-                }
-
-                // read the result
-                statusCode = ((HttpURLConnection)conn).getResponseCode();
-                if(statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
-                    in = new InputStreamReader(((HttpURLConnection)conn).getErrorStream());
-                } else {
-                    in = new InputStreamReader(conn.getInputStream());
-                }
-
-                // get response
-                String line;
-                response = "";
-                BufferedReader reader = new BufferedReader(in);
-                while ((line = reader.readLine()) != null) {
-                    response+=line;
-                }
-
-                // close the body writer
-                if (os != null) {
-                    os.close();
-                }
-                // close the reader
-                in.close();
-
-                // disconnect
-                ((HttpURLConnection)conn).disconnect();
 
                 // return
                 return new SANetworkResponse(statusCode, response);
@@ -145,7 +191,8 @@ public class SANetwork {
             @Override
             public void onFinish(Object result) {
                 if (result != null) {
-                    listener.success((SANetworkResponse)result);
+                    SANetworkResponse response = (SANetworkResponse)result;
+                    listener.success(response.status, response.payload);
                 } else {
                     listener.failure();
                 }
