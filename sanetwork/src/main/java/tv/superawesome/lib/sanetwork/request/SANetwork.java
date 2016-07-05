@@ -83,6 +83,9 @@ public class SANetwork {
                     conn.setUseCaches(false);
                     conn.setDoInput(true);
                     conn.setRequestMethod(method);
+                    if (method.equals("POST")) {
+                        conn.setDoOutput(true);
+                    }
 
                     // set headers
                     Iterator<String> keys = header.keys();
@@ -92,12 +95,12 @@ public class SANetwork {
                         conn.setRequestProperty(key, value);
                     }
 
+
                     // connect
                     conn.connect();
 
                     // write body
                     if (method.equals("POST")) {
-                        conn.setDoOutput(true);
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
@@ -136,6 +139,9 @@ public class SANetwork {
                     conn.setUseCaches(false);
                     conn.setDoInput(true);
                     conn.setRequestMethod(method);
+                    if (method.equals("POST")) {
+                        conn.setDoOutput(true);
+                    }
 
                     // set headers
                     Iterator<String> keys = header.keys();
@@ -150,7 +156,6 @@ public class SANetwork {
 
                     // write body
                     if (method.equals("POST")) {
-                        conn.setDoOutput(true);
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
