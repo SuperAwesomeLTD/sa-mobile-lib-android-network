@@ -112,14 +112,17 @@ public class SAFileDownloader {
                     editor.apply();
 
                 } catch (Exception e) {
-                    /** no file has beet written here */
+                    /** no file has been written here */
+                    e.printStackTrace();
                     return null;
                 }
 
                 try {
                     if (output != null) output.close();
                     if (input != null) input.close();
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                    ignored.printStackTrace();
+                }
 
                 if (connection != null) connection.disconnect();
 

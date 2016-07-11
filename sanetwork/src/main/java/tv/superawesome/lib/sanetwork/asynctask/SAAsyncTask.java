@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -14,7 +15,7 @@ import java.util.Random;
 // maiN async task class
 public class SAAsyncTask {
 
-    private SAAsyncTaskReceiver receiver;
+    // constants
     public static final int STATUS_RUNNING = 0;
     public static final int STATUS_FINISHED = 1;
     public static final int STATUS_ERROR = 2;
@@ -24,32 +25,55 @@ public class SAAsyncTask {
      */
     public SAAsyncTask(Context context, final SAAsyncTaskInterface listener) {
 
-        String hash = "asyncTask_" + new Random().nextInt(65548);
-        SAAsyncTaskPersister persister = new SAAsyncTaskPersister();
-        persister.listener = listener;
-        SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
+        //
+        // Step 1: Try starting a new intent
+        Intent intent = null;
+        try {
+            intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
+        } catch (Exception e) {
+            Log.d("SuperAwesome", "New intent for " + SAAsync.class + " could not be created");
+            e.printStackTrace();
+        }
 
-        receiver = new SAAsyncTaskReceiver(new Handler());
-        receiver.setReceiver(new SAAsyncTaskReceiverInterface() {
-            @Override
-            public void onReceiveResult(int resultCode, Bundle resultData) {
+        //
+        // Step 2: Put extra data in intent
+        if (intent != null) {
 
-                String hash = resultData.getString("hash");
-                SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
+            // form the unique async task hash
+            String hash = "asyncTask_" + new Random().nextInt(65548);
 
-                switch (resultCode) {
-                    case STATUS_RUNNING: break;
-                    case STATUS_FINISHED: { persister.listener.onFinish(persister.result); break; }
-                    case STATUS_ERROR: { persister.listener.onError(); break; }
+            // create a new persister
+            SAAsyncTaskPersister persister = new SAAsyncTaskPersister();
+            persister.listener = listener;
+
+            // add perister to persister store singleton
+            SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
+
+            intent.putExtra("hash", hash);
+            intent.putExtra("receiver", SAAsyncTaskReceiver.factoryCreate(new Handler(), new SAAsyncTaskReceiverInterface() {
+                @Override
+                public void onReceiveResult(int resultCode, Bundle resultData) {
+
+                    String hash = resultData.getString("hash");
+                    SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
+
+                    switch (resultCode) {
+                        case STATUS_RUNNING:
+                            break;
+                        case STATUS_FINISHED: {
+                            persister.listener.onFinish(persister.result);
+                            break;
+                        }
+                        case STATUS_ERROR: {
+                            persister.listener.onError();
+                            break;
+                        }
+                    }
+                    SAAsyncTaskPersisterStore.getInstance().persisterHashMap.remove(hash);
                 }
-                SAAsyncTaskPersisterStore.getInstance().persisterHashMap.remove(hash);
-            }
-        });
-
-        Intent intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
-        intent.putExtra("receiver", receiver);
-        intent.putExtra("hash", hash);
-        context.startService(intent);
+            }));
+            context.startService(intent);
+        }
     }
 
     // the actual intent service
@@ -61,7 +85,7 @@ public class SAAsyncTask {
 
         @Override
         protected void onHandleIntent(Intent intent) {
-            final ResultReceiver receiver = intent.getParcelableExtra("receiver");
+            ResultReceiver receiver = intent.getParcelableExtra("receiver");
             String hash = intent.getStringExtra("hash");
             SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
 
@@ -77,37 +101,11 @@ public class SAAsyncTask {
 
             /** send results forward */
             Bundle bundle = new Bundle();
+            
             bundle.putString("hash", hash);
             receiver.send(STATUS_FINISHED, bundle);
         }
     }
-}
-
-@SuppressLint("ParcelCreator")
-// standard receiver
-class SAAsyncTaskReceiver extends ResultReceiver {
-
-    private SAAsyncTaskReceiverInterface mReceiver;
-
-    public SAAsyncTaskReceiver(Handler handler) {
-        super(handler);
-    }
-
-    public void setReceiver(SAAsyncTaskReceiverInterface receiver) {
-        mReceiver = receiver;
-    }
-
-    @Override
-    protected void onReceiveResult(int resultCode, Bundle resultData) {
-        if (mReceiver != null) {
-            mReceiver.onReceiveResult(resultCode, resultData);
-        }
-    }
-}
-
-// interface for the receiver
-interface SAAsyncTaskReceiverInterface {
-    void onReceiveResult(int resultCode, Bundle resultData);
 }
 
 // persister object
@@ -120,16 +118,51 @@ class SAAsyncTaskPersister {
 // singleton persister - because f!
 class SAAsyncTaskPersisterStore {
 
-    public HashMap<String, SAAsyncTaskPersister> persisterHashMap;
+    // internal hash map
+    public HashMap<String, SAAsyncTaskPersister> persisterHashMap = new HashMap<>();
 
-    private SAAsyncTaskPersisterStore() {
-        persisterHashMap = new HashMap<>();
-    }
+    // private singleton constructor
+    private SAAsyncTaskPersisterStore() {}
 
+    // private singleton instance
     private final static SAAsyncTaskPersisterStore instance = new SAAsyncTaskPersisterStore();
 
+    // singleton getter
     public static SAAsyncTaskPersisterStore getInstance() {
         return instance;
     }
+}
+
+@SuppressLint("ParcelCreator")
+// standard receiver
+class SAAsyncTaskReceiver extends ResultReceiver {
+
+    // private listener
+    private SAAsyncTaskReceiverInterface listener;
+
+    // private constructor
+    private SAAsyncTaskReceiver(Handler handler) {
+        super(handler);
+    }
+
+    // factory create function
+    public static SAAsyncTaskReceiver factoryCreate(Handler handler, SAAsyncTaskReceiverInterface listener) {
+        SAAsyncTaskReceiver receiver = new SAAsyncTaskReceiver(handler);
+        receiver.listener = listener;
+        return receiver;
+    }
+
+    // <ResultReceiver> implementation
+    @Override
+    protected void onReceiveResult(int resultCode, Bundle resultData) {
+        if (listener != null) {
+            listener.onReceiveResult(resultCode, resultData);
+        }
+    }
+}
+
+// interface for the receiver
+interface SAAsyncTaskReceiverInterface {
+    void onReceiveResult(int resultCode, Bundle resultData);
 }
 
