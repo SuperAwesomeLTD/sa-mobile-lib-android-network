@@ -16,9 +16,7 @@ import java.util.Random;
 public class SAAsyncTask {
 
     // constants
-    public static final int STATUS_RUNNING = 0;
     public static final int STATUS_FINISHED = 1;
-    public static final int STATUS_ERROR = 2;
 
     /**
      * Creates a new SAAsync Task
@@ -49,29 +47,44 @@ public class SAAsyncTask {
             // add perister to persister store singleton
             SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
 
-            intent.putExtra("hash", hash);
-            intent.putExtra("receiver", SAAsyncTaskReceiver.factoryCreate(new Handler(), new SAAsyncTaskReceiverInterface() {
+            final SAAsyncTaskReceiver receiver = new SAAsyncTaskReceiver(new Handler());
+            receiver.listener = new SAAsyncTaskReceiverInterface() {
                 @Override
                 public void onReceiveResult(int resultCode, Bundle resultData) {
-
+                    // get hash
                     String hash = resultData.getString("hash");
+
+                    if (hash == null) {
+                        Log.d("SuperAwesome", "[Fatal] Hash for AsyncTask Receiver is null. Quitting intent!");
+                        return;
+                    }
+
+                    // get persister
                     SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
 
-                    switch (resultCode) {
-                        case STATUS_RUNNING:
-                            break;
-                        case STATUS_FINISHED: {
-                            persister.listener.onFinish(persister.result);
-                            break;
-                        }
-                        case STATUS_ERROR: {
-                            persister.listener.onError();
-                            break;
+                    if (persister == null) {
+                        Log.e("SuperAwesome", "[Fatal] Persister for AsyncTask Receiver is null. Quitting intent!");
+                        return;
+                    }
+
+                    // do or error
+                    if (resultCode == STATUS_FINISHED) {
+                        if (persister.listener != null) {
+                            if (persister.result != null) {
+                                persister.listener.onFinish(persister.result);
+                            } else {
+                                persister.listener.onError();
+                            }
                         }
                     }
+
+                    // delete the sent perister object
                     SAAsyncTaskPersisterStore.getInstance().persisterHashMap.remove(hash);
                 }
-            }));
+            };
+
+            intent.putExtra("hash", hash);
+            intent.putExtra("receiver", receiver);
             context.startService(intent);
         }
     }
@@ -85,23 +98,45 @@ public class SAAsyncTask {
 
         @Override
         protected void onHandleIntent(Intent intent) {
+            // get receiver
             ResultReceiver receiver = intent.getParcelableExtra("receiver");
+
+            // if this happens - then something **really** bad has occured and just exit
+            if (receiver == null) {
+                Log.e("SuperAwesome", "[Fatal] Receiver for AsyncTask Intent is null. Quitting intent!");
+                return;
+            }
+
+            // get hash
             String hash = intent.getStringExtra("hash");
+
+            // check hash and receiver are OK
+            if (hash == null) {
+                Log.e("SuperAwesome", "[Fatal] Hash for AsyncTask Intent is null. Quitting intent!");
+                return;
+            }
+
+            // get the perister from the persister store
             SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
 
-            receiver.send(STATUS_RUNNING, Bundle.EMPTY);
-
-            try {
-                persister.result = persister.listener.taskToExecute();
-                SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
-            } catch (Exception e) {
-                persister.result = null;
-                SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
+            // check for
+            if (persister == null) {
+                Log.e("SuperAwesome", "[Fatal] Persister for AsyncTask Intent is null. Quitting intent!");
+                return;
             }
+
+            // try to obtain result
+            try {
+                if (persister.listener != null) {
+                    persister.result = persister.listener.taskToExecute();
+                }
+            }catch (Exception ignored) {}
+
+            /** update data in persister store */
+            SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
 
             /** send results forward */
             Bundle bundle = new Bundle();
-            
             bundle.putString("hash", hash);
             receiver.send(STATUS_FINISHED, bundle);
         }
@@ -138,10 +173,10 @@ class SAAsyncTaskPersisterStore {
 class SAAsyncTaskReceiver extends ResultReceiver {
 
     // private listener
-    private SAAsyncTaskReceiverInterface listener;
+    public SAAsyncTaskReceiverInterface listener;
 
     // private constructor
-    private SAAsyncTaskReceiver(Handler handler) {
+    public SAAsyncTaskReceiver(Handler handler) {
         super(handler);
     }
 

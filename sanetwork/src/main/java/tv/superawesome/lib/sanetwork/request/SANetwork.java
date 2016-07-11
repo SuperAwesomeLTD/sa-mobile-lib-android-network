@@ -197,18 +197,24 @@ public class SANetwork {
             public void onFinish(Object result) {
                 if (result != null) {
                     Log.d("SuperAwesome", "[OK] " + endpoint);
-                    SANetworkResponse response = (SANetworkResponse)result;
-                    listener.success(response.status, response.payload);
-                } else {
+                    SANetworkResponse response = (SANetworkResponse) result;
+                    if (listener != null) {
+                        listener.success(response.status, response.payload);
+                    }
+                }else {
                     Log.d("SuperAwesome", "[NOK] " + endpoint);
-                    listener.failure();
+                    if (listener != null) {
+                        listener.failure();
+                    }
                 }
             }
 
             @Override
             public void onError() {
                 Log.d("SuperAwesome", "[NOK] " + endpoint);
-                listener.failure();
+                if (listener != null) {
+                    listener.failure();
+                }
             }
         });
     }
