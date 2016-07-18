@@ -153,7 +153,10 @@ public class SAFileDownloader {
             if (filename != null) {
                 String fullPath = context.getFilesDir() + "/" + filename;
                 File file = new File(context.getFilesDir(), filename);
-                boolean hasBeenDeleted = file.delete();
+                boolean hasBeenDeleted = false;
+                if (file.exists()) {
+                    hasBeenDeleted = file.delete();
+                }
                 if (hasBeenDeleted) {
                     Log.d("SuperAwesome", "[Deleting] " + fullPath);
                 } else {
