@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public class SAFileDownloader {
         this.context = context;
         preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
         editor = preferences.edit();
-        cleanup();
+        cleanup(context);
     }
 
     /**
@@ -58,27 +59,21 @@ public class SAFileDownloader {
     /**
      * Function that downloads a file
      * @param videoUrl - the remote file ULR
-     * @param fpath - the simple file path of the file
+     * @param filename - the simple file path of the file
      * @param listener - result listener
      */
-    public void downloadFile(final String videoUrl, final String fpath, final SAFileDownloaderInterface listener) {
+    public void downloadFile(final String videoUrl, final String filename, final SAFileDownloaderInterface listener) {
         SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
             @Override
             public Object taskToExecute() throws Exception {
                 /** get the original SA unique key */
-                if (fpath == null) return null;
-                String[] c1 = fpath.split("_");
+                if (filename == null) return null;
+                String[] c1 = filename.split("_");
                 if (c1.length < 2) return null;
                 String key1 = c1[1];
                 String[] c2 = key1.split(".mp4");
                 if (c2.length < 1) return null;
                 String key = c2[0];
-
-                /** actually create the file */
-                File sdCard = Environment.getExternalStorageDirectory();
-                File dir = new File (sdCard.getAbsolutePath() + SA_FOLDER);
-                dir.mkdirs();
-                File file = new File(dir, fpath);
 
                 /** create streams */
                 InputStream input = null;
@@ -97,7 +92,7 @@ public class SAFileDownloader {
 
                     /** get input stream and start writing to disk */
                     input = connection.getInputStream();
-                    output = new FileOutputStream(file);
+                    output = context.openFileOutput(filename, Context.MODE_PRIVATE);
 
                     byte data[] = new byte[4096];
                     long total = 0;
@@ -108,7 +103,7 @@ public class SAFileDownloader {
                     }
 
                     /** here file is written */
-                    editor.putString(key, fpath);
+                    editor.putString(key, filename);
                     editor.apply();
 
                 } catch (Exception e) {
@@ -133,7 +128,7 @@ public class SAFileDownloader {
             @Override
             public void onFinish(Object result) {
                 if (result != null) {
-                    Log.d("SuperAwesome", "[Downloaded] " + videoUrl + " ==> " + fpath);
+                    Log.d("SuperAwesome", "[Downloaded] " + videoUrl + " ==> " + filename);
                     listener.finished();
                 } else {
                     listener.failure();
@@ -150,17 +145,23 @@ public class SAFileDownloader {
     /**
      * Cleanup function - it will remove files and reset preferences
      */
-    private void cleanup() {
+    private void cleanup(Context context) {
         Set<String> keys = preferences.getAll().keySet();
         for (String key : keys) {
-            File sdCard = Environment.getExternalStorageDirectory();
-            File dir = new File (sdCard.getAbsolutePath() + SA_FOLDER);
-            dir.mkdirs();
-            String filePath = preferences.getString(key, "");
-            File file = new File(dir, filePath);
-            boolean deleted = file.delete();
-            Log.d("SuperAwesome", "[Deleting] " + deleted + ":" + file.toURI());
-            editor.remove(key);
+
+            String filename = preferences.getString(key, null);
+            if (filename != null) {
+                String fullPath = context.getFilesDir() + "/" + filename;
+                File file = new File(context.getFilesDir(), filename);
+                boolean hasBeenDeleted = file.delete();
+                if (hasBeenDeleted) {
+                    Log.d("SuperAwesome", "[Deleting] " + fullPath);
+                } else {
+                    Log.d("SuperAwesome", "[NOK-Deleting]" + fullPath);
+                }
+                editor.remove(key);
+                editor.apply();
+            }
         }
         editor.apply();
     }
