@@ -2,19 +2,14 @@ package tv.superawesome.lib.sanetwork.file;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Environment;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -129,15 +124,16 @@ public class SAFileDownloader {
             public void onFinish(Object result) {
                 if (result != null) {
                     Log.d("SuperAwesome", "[Downloaded] " + videoUrl + " ==> " + filename);
-                    listener.finished();
+                    listener.response(true);
                 } else {
-                    listener.failure();
+                    Log.d("SuperAwesome", "[Not Downloaded] " + videoUrl + " ==> " + filename);
+                    listener.response(false);
                 }
             }
 
             @Override
             public void onError() {
-                listener.failure();
+                listener.response(false);
             }
         });
     }

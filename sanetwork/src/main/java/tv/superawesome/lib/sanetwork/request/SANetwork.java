@@ -95,7 +95,6 @@ public class SANetwork {
                         conn.setRequestProperty(key, value);
                     }
 
-
                     // connect
                     conn.connect();
 
@@ -199,12 +198,12 @@ public class SANetwork {
                     Log.d("SuperAwesome", "[OK] " + endpoint);
                     SANetworkResponse response = (SANetworkResponse) result;
                     if (listener != null) {
-                        listener.success(response.status, response.payload);
+                        listener.response(response.status, response.payload, true);
                     }
-                }else {
+                } else {
                     Log.d("SuperAwesome", "[NOK] " + endpoint);
                     if (listener != null) {
-                        listener.failure();
+                        listener.response(0, null, false);
                     }
                 }
             }
@@ -213,7 +212,7 @@ public class SANetwork {
             public void onError() {
                 Log.d("SuperAwesome", "[NOK] " + endpoint);
                 if (listener != null) {
-                    listener.failure();
+                    listener.response(0, null, false);
                 }
             }
         });

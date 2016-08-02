@@ -8,11 +8,6 @@ public interface SAFileDownloaderInterface {
     /**
      * Function that signals finish
      */
-    public void finished();
-
-    /**
-     * Function when error
-     */
-    public void failure();
+    void response(boolean success);
 
 }

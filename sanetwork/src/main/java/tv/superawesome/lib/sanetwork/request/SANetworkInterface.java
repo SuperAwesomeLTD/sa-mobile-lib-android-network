@@ -6,19 +6,13 @@ package tv.superawesome.lib.sanetwork.request;
 public interface SANetworkInterface {
 
     /**
-     * This function should be called in case of Async operation success, and should
+     * This function should be called in case of Async operation response, and should
      * always return an anonymous data object
      *
      * @param status - the status of the call
-     * @param response - is a callback parameter; to be accessed by the class that implements
+     * @param payload - is a callback parameter; to be accessed by the class that implements
+     * @param success - a boolean that tells whether the request is a success or not
      * this Listener interface
      */
-    void success(int status, String response);
-
-    /**
-     * This function should be called in case of Async operation failure, and
-     * should have no parameters
-     */
-    void failure();
-
+    void response(int status, String payload, boolean success);
 }
