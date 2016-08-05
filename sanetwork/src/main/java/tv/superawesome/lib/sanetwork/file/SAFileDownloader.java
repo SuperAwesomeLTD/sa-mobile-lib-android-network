@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 
@@ -29,14 +31,7 @@ public class SAFileDownloader {
     private SharedPreferences.Editor editor;
     private Context context;
 
-    /** the singleton SuperAwesome instance */
-    private static SAFileDownloader instance = new SAFileDownloader();
-    private SAFileDownloader () {}
-    public static SAFileDownloader getInstance(){
-        return instance;
-    }
-
-    public void setupDownloader(Context context) {
+    public SAFileDownloader (Context context) {
         this.context = context;
         preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
         editor = preferences.edit();
@@ -47,7 +42,7 @@ public class SAFileDownloader {
      * Returns a key-enabled disk location
      * @return
      */
-    public String getDiskLocation () {
+    public static String getDiskLocation () {
         return "samov_" + new Random().nextInt(65548) + ".mp4";
     }
 
@@ -69,6 +64,9 @@ public class SAFileDownloader {
                 String[] c2 = key1.split(".mp4");
                 if (c2.length < 1) return null;
                 String key = c2[0];
+
+                // success var
+                boolean success = true;
 
                 /** create streams */
                 InputStream input = null;
@@ -101,32 +99,50 @@ public class SAFileDownloader {
                     editor.putString(key, filename);
                     editor.apply();
 
-                } catch (Exception e) {
-                    /** no file has been written here */
-                    e.printStackTrace();
-                    return null;
+                }
+                catch (MalformedURLException e) {
+                    success = false;
+                }
+                catch (Exception e) {
+                    success = false;
                 }
 
+                // try to close this
                 try {
                     if (output != null) output.close();
                     if (input != null) input.close();
-                } catch (IOException ignored) {
-                    ignored.printStackTrace();
-                }
+                } catch (IOException ignored) {}
 
+                // disconnect
                 if (connection != null) connection.disconnect();
 
                 /** if all goes well up until here, just return an empty object */
-                return new Object();
+                HashMap<String, Boolean> downloadResponse = new HashMap<>();
+                downloadResponse.put("success", success);
+                return downloadResponse;
             }
 
             @Override
             public void onFinish(Object result) {
-                if (result != null) {
-                    Log.d("SuperAwesome", "[Downloaded] " + videoUrl + " ==> " + filename);
-                    listener.response(true);
+
+                if (result != null && result instanceof HashMap) {
+
+                    HashMap<String, Boolean> response = (HashMap<String, Boolean>)result;
+                    boolean success = false;
+                    if (response.containsKey("success")) {
+                        success = response.get("success");
+                    }
+
+                    if (success) {
+                        Log.d("SuperAwesome", "[true] | FILE GET | 200 | " + videoUrl + " ==> " + filename);
+                        listener.response(true);
+                    } else {
+                        Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
+                        listener.response(false);
+                    }
+
                 } else {
-                    Log.d("SuperAwesome", "[Not Downloaded] " + videoUrl + " ==> " + filename);
+                    Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
                     listener.response(false);
                 }
             }
@@ -154,9 +170,9 @@ public class SAFileDownloader {
                     hasBeenDeleted = file.delete();
                 }
                 if (hasBeenDeleted) {
-                    Log.d("SuperAwesome", "[Deleting] " + fullPath);
+                    Log.d("SuperAwesome", "[true] | DEL | " + fullPath);
                 } else {
-                    Log.d("SuperAwesome", "[NOK-Deleting]" + fullPath);
+                    Log.d("SuperAwesome", "[false] | DEL | " + fullPath);
                 }
                 editor.remove(key);
                 editor.apply();

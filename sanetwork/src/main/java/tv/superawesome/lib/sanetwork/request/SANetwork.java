@@ -12,7 +12,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.StringTokenizer;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -188,21 +191,45 @@ public class SANetwork {
                     conn.disconnect();
                 }
 
+                // create the final response
+                HashMap<String, Object> networkResponse = new HashMap<>();
+                networkResponse.put("statusCode", statusCode);
+                networkResponse.put("payload", response);
+
                 // return
-                return new SANetworkResponse(statusCode, response);
+                return networkResponse;
             }
 
             @Override
             public void onFinish(Object result) {
-                if (result != null) {
-                    Log.d("SuperAwesome", "[OK] " + endpoint);
-                    SANetworkResponse response = (SANetworkResponse) result;
-                    if (listener != null) {
-                        listener.response(response.status, response.payload, true);
+                if (result != null && result instanceof HashMap) {
+
+                    // get the hash map
+                    HashMap<String, Object> response = (HashMap<String, Object>)result;
+                    int status = -1;
+                    String payload = null;
+                    if (response.containsKey("statusCode")) {
+                        status = (int) response.get("statusCode");
+                    }
+                    if (response.containsKey("payload")) {
+                        payload = (String) response.get("payload");
+                    }
+
+                    // call the result
+                    if (status > -1 && payload != null) {
+                        if (listener != null) {
+                            Log.d("SuperAwesome", "[true] | HTTP " + method + " | " + status + " | " + endpoint + " ==> " + payload);
+                            listener.response(status, payload, true);
+                        }
+                    } else {
+                        if (listener != null) {
+                            Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + status + " | " + endpoint);
+                            listener.response(0, null, false);
+                        }
                     }
                 } else {
-                    Log.d("SuperAwesome", "[NOK] " + endpoint);
                     if (listener != null) {
+                        Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
                         listener.response(0, null, false);
                     }
                 }
@@ -210,7 +237,7 @@ public class SANetwork {
 
             @Override
             public void onError() {
-                Log.d("SuperAwesome", "[NOK] " + endpoint);
+                Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
                 if (listener != null) {
                     listener.response(0, null, false);
                 }
