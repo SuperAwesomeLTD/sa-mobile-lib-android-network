@@ -52,6 +52,19 @@ public class SANetwork {
     }
 
     /**
+     * PUT Request
+     * @param context the context
+     * @param url target url
+     * @param query for parameters
+     * @param header dictionary
+     * @param body dictionary
+     * @param listener callback
+     */
+    public void sendPUT(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SANetworkInterface listener) {
+        sendRequest(context, url, "PUT", query, header, body, listener);
+    }
+
+    /**
      * Request function
      * @param context current context
      * @param url URL to send the request to
@@ -102,7 +115,7 @@ public class SANetwork {
                     conn.connect();
 
                     // write body
-                    if (method.equals("POST")) {
+                    if (method.equals("POST") || method.equals("PUT")) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
@@ -157,7 +170,7 @@ public class SANetwork {
                     conn.connect();
 
                     // write body
-                    if (method.equals("POST")) {
+                    if (method.equals("POST") || method.equals("PUT")) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
