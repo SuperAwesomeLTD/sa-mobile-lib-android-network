@@ -25,6 +25,7 @@ public class SAFileDownloader {
     /** constants */
     private final String PREFERENCES = "MyPreferences";
     private final String SA_FOLDER = "/satmofolder";
+    private static boolean cleanupOnce = false;
 
     /** private variables */
     private SharedPreferences preferences;
@@ -35,7 +36,10 @@ public class SAFileDownloader {
         this.context = context;
         preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
         editor = preferences.edit();
-        cleanup(context);
+        if (!cleanupOnce) {
+            cleanupOnce = true;
+            cleanup(context);
+        }
     }
 
     /**
