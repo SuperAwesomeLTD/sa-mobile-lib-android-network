@@ -46,8 +46,8 @@ public class SAFileDownloader {
      * Returns a key-enabled disk location
      * @return
      */
-    public static String getDiskLocation () {
-        return "samov_" + new Random().nextInt(65548) + ".mp4";
+    public static String getDiskLocation (String extension) {
+        return "samov_" + new Random().nextInt(65548) + "." + extension;
     }
 
     /**
@@ -56,7 +56,7 @@ public class SAFileDownloader {
      * @param filename - the simple file path of the file
      * @param listener - result listener
      */
-    public void downloadFile(final String videoUrl, final String filename, final SAFileDownloaderInterface listener) {
+    public void downloadFile(final String videoUrl, final String filename, final String extension, final SAFileDownloaderInterface listener) {
         SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
             @Override
             public Object taskToExecute() throws Exception {
@@ -65,7 +65,7 @@ public class SAFileDownloader {
                 String[] c1 = filename.split("_");
                 if (c1.length < 2) return null;
                 String key1 = c1[1];
-                String[] c2 = key1.split(".mp4");
+                String[] c2 = key1.split("." + extension);
                 if (c2.length < 1) return null;
                 String key = c2[0];
 
