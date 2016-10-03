@@ -57,105 +57,105 @@ public class SAFileDownloader {
      * @param listener - result listener
      */
     public void downloadFile(final String videoUrl, final String filename, final String extension, final SAFileDownloaderInterface listener) {
-        SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
-            @Override
-            public Object taskToExecute() throws Exception {
-                /** get the original SA unique key */
-                if (filename == null) return null;
-                String[] c1 = filename.split("_");
-                if (c1.length < 2) return null;
-                String key1 = c1[1];
-                String[] c2 = key1.split("." + extension);
-                if (c2.length < 1) return null;
-                String key = c2[0];
-
-                // success var
-                boolean success = true;
-
-                /** create streams */
-                InputStream input = null;
-                OutputStream output = null;
-                HttpURLConnection connection = null;
-                try {
-                    /** start connection */
-                    URL url = new URL(videoUrl);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.connect();
-
-                    int statusCode = connection.getResponseCode();
-
-                    /** exception code != 200 */
-                    if (statusCode != HttpURLConnection.HTTP_OK) return null;
-
-                    /** get input stream and start writing to disk */
-                    input = connection.getInputStream();
-                    output = context.openFileOutput(filename, Context.MODE_PRIVATE);
-
-                    byte data[] = new byte[4096];
-                    long total = 0;
-                    int count;
-                    while ((count = input.read(data)) != -1) {
-                        total += count;
-                        output.write(data, 0, count);
-                    }
-
-                    /** here file is written */
-                    editor.putString(key, filename);
-                    editor.apply();
-
-                }
-                catch (MalformedURLException e) {
-                    success = false;
-                }
-                catch (Exception e) {
-                    success = false;
-                }
-
-                // try to close this
-                try {
-                    if (output != null) output.close();
-                    if (input != null) input.close();
-                } catch (IOException ignored) {}
-
-                // disconnect
-                if (connection != null) connection.disconnect();
-
-                /** if all goes well up until here, just return an empty object */
-                HashMap<String, Boolean> downloadResponse = new HashMap<>();
-                downloadResponse.put("success", success);
-                return downloadResponse;
-            }
-
-            @Override
-            public void onFinish(Object result) {
-
-                if (result != null && result instanceof HashMap) {
-
-                    HashMap<String, Boolean> response = (HashMap<String, Boolean>)result;
-                    boolean success = false;
-                    if (response.containsKey("success")) {
-                        success = response.get("success");
-                    }
-
-                    if (success) {
-                        Log.d("SuperAwesome", "[true] | FILE GET | 200 | " + videoUrl + " ==> " + filename);
-                        listener.response(true);
-                    } else {
-                        Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
-                        listener.response(false);
-                    }
-
-                } else {
-                    Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
-                    listener.response(false);
-                }
-            }
-
-            @Override
-            public void onError() {
-                listener.response(false);
-            }
-        });
+//        SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
+//            @Override
+//            public Object taskToExecute() throws Exception {
+//                /** get the original SA unique key */
+//                if (filename == null) return null;
+//                String[] c1 = filename.split("_");
+//                if (c1.length < 2) return null;
+//                String key1 = c1[1];
+//                String[] c2 = key1.split("." + extension);
+//                if (c2.length < 1) return null;
+//                String key = c2[0];
+//
+//                // success var
+//                boolean success = true;
+//
+//                /** create streams */
+//                InputStream input = null;
+//                OutputStream output = null;
+//                HttpURLConnection connection = null;
+//                try {
+//                    /** start connection */
+//                    URL url = new URL(videoUrl);
+//                    connection = (HttpURLConnection) url.openConnection();
+//                    connection.connect();
+//
+//                    int statusCode = connection.getResponseCode();
+//
+//                    /** exception code != 200 */
+//                    if (statusCode != HttpURLConnection.HTTP_OK) return null;
+//
+//                    /** get input stream and start writing to disk */
+//                    input = connection.getInputStream();
+//                    output = context.openFileOutput(filename, Context.MODE_PRIVATE);
+//
+//                    byte data[] = new byte[4096];
+//                    long total = 0;
+//                    int count;
+//                    while ((count = input.read(data)) != -1) {
+//                        total += count;
+//                        output.write(data, 0, count);
+//                    }
+//
+//                    /** here file is written */
+//                    editor.putString(key, filename);
+//                    editor.apply();
+//
+//                }
+//                catch (MalformedURLException e) {
+//                    success = false;
+//                }
+//                catch (Exception e) {
+//                    success = false;
+//                }
+//
+//                // try to close this
+//                try {
+//                    if (output != null) output.close();
+//                    if (input != null) input.close();
+//                } catch (IOException ignored) {}
+//
+//                // disconnect
+//                if (connection != null) connection.disconnect();
+//
+//                /** if all goes well up until here, just return an empty object */
+//                HashMap<String, Boolean> downloadResponse = new HashMap<>();
+//                downloadResponse.put("success", success);
+//                return downloadResponse;
+//            }
+//
+//            @Override
+//            public void onFinish(Object result) {
+//
+//                if (result != null && result instanceof HashMap) {
+//
+//                    HashMap<String, Boolean> response = (HashMap<String, Boolean>)result;
+//                    boolean success = false;
+//                    if (response.containsKey("success")) {
+//                        success = response.get("success");
+//                    }
+//
+//                    if (success) {
+//                        Log.d("SuperAwesome", "[true] | FILE GET | 200 | " + videoUrl + " ==> " + filename);
+//                        listener.response(true);
+//                    } else {
+//                        Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
+//                        listener.response(false);
+//                    }
+//
+//                } else {
+//                    Log.d("SuperAwesome", "[false] | FILE GET | 0 | " + videoUrl + " ==> " + filename);
+//                    listener.response(false);
+//                }
+//            }
+//
+//            @Override
+//            public void onError() {
+//                listener.response(false);
+//            }
+//        });
     }
 
     /**

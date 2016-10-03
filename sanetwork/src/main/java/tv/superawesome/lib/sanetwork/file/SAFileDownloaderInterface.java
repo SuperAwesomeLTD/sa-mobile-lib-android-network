@@ -8,6 +8,6 @@ public interface SAFileDownloaderInterface {
     /**
      * Function that signals finish
      */
-    void response(boolean success);
+    void response(boolean success, String diskUrl);
 
 }
