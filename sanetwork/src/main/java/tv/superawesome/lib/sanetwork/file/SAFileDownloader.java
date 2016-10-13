@@ -331,21 +331,28 @@ public class SAFileDownloader {
         Set<String> keys = preferences.getAll().keySet();
         for (String key : keys) {
 
-            String filename = preferences.getString(key, null);
-            if (filename != null) {
-                String fullPath = context.getFilesDir() + "/" + filename;
-                File file = new File(context.getFilesDir(), filename);
-                boolean hasBeenDeleted = false;
-                if (file.exists()) {
-                    hasBeenDeleted = file.delete();
+            try {
+
+                String filename = preferences.getString(key, null);
+
+                if (filename != null) {
+                    String fullPath = context.getFilesDir() + "/" + filename;
+                    File file = new File(context.getFilesDir(), filename);
+                    boolean hasBeenDeleted = false;
+                    if (file.exists()) {
+                        hasBeenDeleted = file.delete();
+                    }
+                    if (hasBeenDeleted) {
+                        Log.d("SuperAwesome", "[true] | DEL | " + fullPath);
+                    } else {
+                        Log.d("SuperAwesome", "[false] | DEL | " + fullPath);
+                    }
+                    editor.remove(key);
+                    editor.apply();
                 }
-                if (hasBeenDeleted) {
-                    Log.d("SuperAwesome", "[true] | DEL | " + fullPath);
-                } else {
-                    Log.d("SuperAwesome", "[false] | DEL | " + fullPath);
-                }
-                editor.remove(key);
-                editor.apply();
+
+            } catch (ClassCastException e) {
+                // do nothing
             }
         }
         editor.apply();
