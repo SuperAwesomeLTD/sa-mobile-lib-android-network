@@ -28,14 +28,6 @@ public class SAAsyncTask {
         Intent intent = null;
         try {
             intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
-        } catch (Exception e) {
-            Log.d("SuperAwesome", "New intent for " + SAAsync.class + " could not be created");
-            e.printStackTrace();
-        }
-
-        //
-        // Step 2: Put extra data in intent
-        if (intent != null) {
 
             // form the unique async task hash
             String hash = "asyncTask_" + new Random().nextInt(65548);
@@ -51,11 +43,12 @@ public class SAAsyncTask {
             receiver.listener = new SAAsyncTaskReceiverInterface() {
                 @Override
                 public void onReceiveResult(int resultCode, Bundle resultData) {
+
                     // get hash
                     String hash = resultData.getString("hash");
 
                     if (hash == null) {
-                        Log.d("SuperAwesome", "[Fatal] Hash for AsyncTask Receiver is null. Quitting intent!");
+                        Log.e("SuperAwesome", "[Fatal] Hash for AsyncTask Receiver is null. Quitting intent!");
                         return;
                     }
 
@@ -86,6 +79,13 @@ public class SAAsyncTask {
             intent.putExtra("hash", hash);
             intent.putExtra("receiver", receiver);
             context.startService(intent);
+
+        }
+        // just catch the exception and call the error method in the listener
+        catch (Exception e) {
+            if (listener != null) {
+                listener.onError();
+            }
         }
     }
 
@@ -101,7 +101,7 @@ public class SAAsyncTask {
             // get receiver
             ResultReceiver receiver = intent.getParcelableExtra("receiver");
 
-            // if this happens - then something **really** bad has occured and just exit
+            // if this happens - then something **really** bad has occurred and just exit
             if (receiver == null) {
                 Log.e("SuperAwesome", "[Fatal] Receiver for AsyncTask Intent is null. Quitting intent!");
                 return;
@@ -178,13 +178,6 @@ class SAAsyncTaskReceiver extends ResultReceiver {
     // private constructor
     public SAAsyncTaskReceiver(Handler handler) {
         super(handler);
-    }
-
-    // factory create function
-    public static SAAsyncTaskReceiver factoryCreate(Handler handler, SAAsyncTaskReceiverInterface listener) {
-        SAAsyncTaskReceiver receiver = new SAAsyncTaskReceiver(handler);
-        receiver.listener = listener;
-        return receiver;
     }
 
     // <ResultReceiver> implementation

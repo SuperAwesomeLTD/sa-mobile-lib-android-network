@@ -14,12 +14,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
-import java.util.StringTokenizer;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import tv.superawesome.lib.sanetwork.asynctask.*;
+import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTask;
+import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTaskInterface;
 
 /**
  * Created by gabriel.coman on 06/04/16.
@@ -79,6 +78,7 @@ public class SANetwork {
         // endpoint
         final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
 
+
         SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
             @Override
             public Object taskToExecute() throws Exception {
@@ -104,18 +104,20 @@ public class SANetwork {
                     }
 
                     // set headers
-                    Iterator<String> keys = header.keys();
-                    while (keys.hasNext()) {
-                        String key = keys.next();
-                        String value = header.optString(key);
-                        conn.setRequestProperty(key, value);
+                    if (header != null) {
+                        Iterator<String> keys = header.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            String value = header.optString(key);
+                            conn.setRequestProperty(key, value);
+                        }
                     }
 
                     // connect
                     conn.connect();
 
                     // write body
-                    if (method.equals("POST") || method.equals("PUT")) {
+                    if (body != null && (method.equals("POST") || method.equals("PUT"))) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
@@ -159,18 +161,20 @@ public class SANetwork {
                     }
 
                     // set headers
-                    Iterator<String> keys = header.keys();
-                    while (keys.hasNext()) {
-                        String key = keys.next();
-                        String value = header.optString(key);
-                        conn.setRequestProperty(key, value);
+                    if (header != null) {
+                        Iterator<String> keys = header.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            String value = header.optString(key);
+                            conn.setRequestProperty(key, value);
+                        }
                     }
 
                     // connect
                     conn.connect();
 
                     // write body
-                    if (method.equals("POST") || method.equals("PUT")) {
+                    if (body != null && (method.equals("POST") || method.equals("PUT"))) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
@@ -264,10 +268,7 @@ public class SANetwork {
      * @return either true or false
      */
     private static boolean isJSONEmpty(JSONObject dict) {
-        if (dict == null) return true;
-        if (dict.length() == 0) return true;
-        if (dict.toString().equals("{}")) return true;
-        return false;
+        return dict == null || dict.length() == 0 || dict.toString().equals("{}");
     }
 
     /**

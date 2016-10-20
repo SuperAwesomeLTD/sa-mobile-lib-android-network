@@ -23,7 +23,6 @@ public class SAFileDownloader {
 
     // constants
     private final String PREFERENCES = "MyPreferences";
-    private final int MAX_RETRIES = 3;
 
     private SADownloadQueue queue = null;
     private SADownloadItem currentItem = null;
@@ -62,21 +61,11 @@ public class SAFileDownloader {
     }
 
     /**
-     * Get a new disk location
-     * @param extension type of extension (mp4, png, etc)
-     * @return a new valid unique disk location
-     */
-    public String getDiskLocation (String extension) {
-        return "samov_" + new Random().nextInt(65548) + "." + extension;
-    }
-
-    /**
      * Download a file from a remote location to the disk
      * @param url the remote url
-     * @param ext the extension of the file
      * @param listener the callback when the async call succeeds
      */
-    public void downloadFileFrom(Context context, String url, String ext, SAFileDownloaderInterface listener) {
+    public void downloadFileFrom(Context context, String url, SAFileDownloaderInterface listener) {
 
         if (!cleanupOnce) {
             cleanupOnce = true;
@@ -102,7 +91,7 @@ public class SAFileDownloader {
             }
             // if file not already downloaded add to queue
             else {
-                if (listener != null && item != null) {
+                if (item != null) {
                     item.addResponse(listener);
                 }
             }
@@ -111,21 +100,28 @@ public class SAFileDownloader {
         // if File is not already in queue
         else {
 
-            Log.d("SuperAwesome", "Adding new URL to queue: " + url);
-
             // create a new item
-            SADownloadItem item = new SADownloadItem();
-            item.urlKey = url;
-            item.ext = ext;
-            if (listener != null) {
-                item.addResponse(listener);
+            SADownloadItem item = new SADownloadItem(url, listener);
+
+            // if the new item is valid (e.g. valid url, disk path, key, etc)
+            // then proceed with the operation
+            if (item.isValid()) {
+                Log.d("SuperAwesome", "Adding new URL to queue: " + url);
+
+                // add the item to the queue
+                queue.addToQueue(item);
+
+                // check on queue
+                checkOnQueue(context);
             }
+            // if it's not ok (e.g. invalid url) then respond w/ false
+            else {
+                Log.d("SuperAwesome", "Not adding new URL to queue: " + url + " becase it's not valid");
 
-            // add the item to the queue
-            queue.addToQueue(item);
-
-            // check on queue
-            checkOnQueue(context);
+                if (listener != null) {
+                    listener.response(false, null);
+                }
+            }
         }
     }
 
@@ -140,17 +136,8 @@ public class SAFileDownloader {
             // if that current "next" item actually exists
             if (currentItem != null) {
 
-                // assign a new disk url if it does not exist
-                if (currentItem.diskUrl == null) {
-                    currentItem.diskUrl = getDiskLocation(currentItem.ext);
-                    String[] c1 = currentItem.diskUrl .split("_");
-                    String key1 = c1[1];
-                    String[] c2 = key1.split("." + currentItem.ext);
-                    currentItem.key = c2[0];
-                }
-
                 // if this item can actually be downloaded (e.g. nr retries < MAX)
-                if (currentItem.nrRetries < MAX_RETRIES) {
+                if (currentItem.hasRetriesRemaining()) {
 
                     Log.d("SuperAwesome", "Start work on queue for " + currentItem.diskUrl + " Try " + (currentItem.nrRetries + 1) + " / 3");
 
@@ -252,10 +239,7 @@ public class SAFileDownloader {
                                 SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
                                 SharedPreferences.Editor editor = preferences.edit();
 
-                                String filename = currentItem.diskUrl;
-                                String key = currentItem.key;
-
-                                editor.putString(key, filename);
+                                editor.putString(currentItem.key, currentItem.diskUrl);
                                 editor.apply();
 
                                 // send response
@@ -280,8 +264,7 @@ public class SAFileDownloader {
                                 isDownloaderBusy = false;
                                 currentItem.incrementNrRetries();
                                 currentItem.isOnDisk = false;
-                                queue.removeFromQueue(currentItem);
-                                queue.addToQueue(currentItem);
+                                queue.moveToBackOfQueue(currentItem);
                                 checkOnQueue(context);
                             }
                         }
@@ -292,14 +275,13 @@ public class SAFileDownloader {
                             isDownloaderBusy = false;
                             currentItem.incrementNrRetries();
                             currentItem.isOnDisk = false;
-                            queue.removeFromQueue(currentItem);
-                            queue.addToQueue(currentItem);
+                            queue.moveToBackOfQueue(currentItem);
                             checkOnQueue(context);
                         }
                     });
 
                 }
-                // if not, then renounce downlading it
+                // if not, then renounce downloading it
                 else {
 
                     // send error events
@@ -355,6 +337,8 @@ public class SAFileDownloader {
                 // do nothing
             }
         }
+
+        // apply
         editor.apply();
     }
 }
