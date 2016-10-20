@@ -67,6 +67,15 @@ public class SAFileDownloader {
      */
     public void downloadFileFrom(Context context, String url, SAFileDownloaderInterface listener) {
 
+        // check for null context
+        if (context == null) {
+            if (listener != null) {
+                listener.response(false, null);
+            }
+            return;
+        }
+
+        // cleanup the disk cache once!
         if (!cleanupOnce) {
             cleanupOnce = true;
             cleanup(context);

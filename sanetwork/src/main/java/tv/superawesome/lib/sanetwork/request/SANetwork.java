@@ -78,7 +78,6 @@ public class SANetwork {
         // endpoint
         final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
 
-
         SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
             @Override
             public Object taskToExecute() throws Exception {
