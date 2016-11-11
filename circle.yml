@@ -5,3 +5,9 @@ dependencies:
 checkout:
   post:
     - cp local.properties.ci local.properties
+
+test:
+  override:
+    - ./gradlew clean
+    - ./gradlew build
+    - ./gradlew connectedAndroidTest
