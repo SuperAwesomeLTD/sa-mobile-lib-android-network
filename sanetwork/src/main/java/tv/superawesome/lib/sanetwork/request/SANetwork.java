@@ -23,7 +23,7 @@ import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTaskInterface;
 /**
  * Created by gabriel.coman on 06/04/16.
  */
-public class SARequest {
+public class SANetwork {
 
     /**
      * GET function
@@ -33,7 +33,7 @@ public class SARequest {
      * @param header the header
      * @param listener the listener for response
      */
-    public void sendGET(Context context, String url, JSONObject query, JSONObject header, SARequestInterface listener) {
+    public void sendGET(Context context, String url, JSONObject query, JSONObject header, SANetworkInterface listener) {
         sendRequest(context, url, "GET", query, header, new JSONObject(), listener);
     }
 
@@ -46,7 +46,7 @@ public class SARequest {
      * @param body the body
      * @param listener the listener
      */
-    public void sendPOST(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SARequestInterface listener) {
+    public void sendPOST(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SANetworkInterface listener) {
         sendRequest(context, url, "POST", query, header, body, listener);
     }
 
@@ -59,7 +59,7 @@ public class SARequest {
      * @param body dictionary
      * @param listener callback
      */
-    public void sendPUT(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SARequestInterface listener) {
+    public void sendPUT(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SANetworkInterface listener) {
         sendRequest(context, url, "PUT", query, header, body, listener);
     }
 
@@ -73,7 +73,7 @@ public class SARequest {
      * @param body body parameters
      * @param listener interface listener to get responses on
      */
-    private void sendRequest(Context context, String url, final String method, JSONObject query, final JSONObject header, final JSONObject body, final SARequestInterface listener) {
+    private void sendRequest(Context context, String url, final String method, JSONObject query, final JSONObject header, final JSONObject body, final SANetworkInterface listener) {
 
         // endpoint
         final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");

@@ -3,7 +3,7 @@ package tv.superawesome.lib.sanetwork.request;
 /**
  * This is a listener interface for SAGet and SAPost async task classes
  */
-public interface SARequestInterface {
+public interface SANetworkInterface {
 
     /**
      * This function should be called in case of Async operation response, and should

@@ -35,7 +35,7 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "maven"
-        name = "SARequest"
+        name = "SANetwork"
         websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = ["Apache-2.0"]
