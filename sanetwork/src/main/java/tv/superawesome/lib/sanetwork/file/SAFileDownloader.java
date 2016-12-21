@@ -125,7 +125,7 @@ public class SAFileDownloader {
             }
             // if it's not ok (e.g. invalid url) then respond w/ false
             else {
-                Log.d("SuperAwesome", "Not adding new URL to queue: " + url + " becase it's not valid");
+                Log.d("SuperAwesome", "Not adding new URL to queue: " + url + " because it's not valid");
 
                 if (listener != null) {
                     listener.response(false, null);

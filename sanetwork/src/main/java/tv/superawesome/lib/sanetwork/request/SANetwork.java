@@ -20,9 +20,6 @@ import javax.net.ssl.HttpsURLConnection;
 import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTask;
 import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTaskInterface;
 
-/**
- * Created by gabriel.coman on 06/04/16.
- */
 public class SANetwork {
 
     /**
@@ -61,6 +58,19 @@ public class SANetwork {
      */
     public void sendPUT(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SANetworkInterface listener) {
         sendRequest(context, url, "PUT", query, header, body, listener);
+    }
+
+    /**
+     * PATCH Request
+     * @param context the context
+     * @param url the URL
+     * @param query the query
+     * @param header the header
+     * @param body the body
+     * @param listener the listener
+     */
+    public void sendPATCH(Context context, String url, JSONObject query, JSONObject header, JSONObject body, SANetworkInterface listener) {
+        sendRequest(context, url, "PATCH", query, header, body, listener);
     }
 
     /**
@@ -116,7 +126,7 @@ public class SANetwork {
                     conn.connect();
 
                     // write body
-                    if (body != null && (method.equals("POST") || method.equals("PUT"))) {
+                    if (body != null && (method.equals("POST") || method.equals("PUT") || method.equals("PATCH") )) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
@@ -173,7 +183,7 @@ public class SANetwork {
                     conn.connect();
 
                     // write body
-                    if (body != null && (method.equals("POST") || method.equals("PUT"))) {
+                    if (body != null && (method.equals("POST") || method.equals("PUT") || method.equals("PATCH"))) {
                         String message = body.toString();
                         os = new BufferedOutputStream(conn.getOutputStream());
                         os.write(message.getBytes());
