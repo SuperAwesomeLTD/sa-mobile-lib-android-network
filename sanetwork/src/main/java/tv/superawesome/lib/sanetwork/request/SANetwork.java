@@ -108,7 +108,7 @@ public class SANetwork {
                     conn.setUseCaches(false);
                     conn.setDoInput(true);
                     conn.setRequestMethod(method);
-                    if (method.equals("POST")) {
+                    if (method.equals("POST") || method.equals("PUT") || method.equals("PATCH")) {
                         conn.setDoOutput(true);
                     }
 
@@ -165,7 +165,7 @@ public class SANetwork {
                     conn.setUseCaches(false);
                     conn.setDoInput(true);
                     conn.setRequestMethod(method);
-                    if (method.equals("POST")) {
+                    if (method.equals("POST") || method.equals("PUT") || method.equals("PATCH")) {
                         conn.setDoOutput(true);
                     }
 
