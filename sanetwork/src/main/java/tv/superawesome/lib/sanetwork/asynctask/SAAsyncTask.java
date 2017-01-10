@@ -18,7 +18,11 @@ import java.util.Random;
 public class SAAsyncTask {
 
     // constants
+    private static final String TASK_KEY = "asyncTask_";
     private static final int STATUS_FINISHED = 1;
+
+    //
+    private static HashMap <String, SAAsyncTaskPersister> persisterHashMap = new HashMap<>();
 
     // constructor
     public SAAsyncTask(Context context, final SAAsyncTaskInterface listener) {
@@ -29,14 +33,14 @@ public class SAAsyncTask {
             Intent intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
 
             // form the unique async task hash
-            String hash = "asyncTask_" + new Random().nextInt(65548);
+            String hash = TASK_KEY + new Random().nextInt(65548);
 
             // create a new persister
             SAAsyncTaskPersister persister = new SAAsyncTaskPersister();
             persister.listener = listener;
 
             // add perister to persister store singleton
-            SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
+            persisterHashMap.put(hash, persister);
 
             final SAAsyncTaskReceiver receiver = new SAAsyncTaskReceiver(new Handler());
             receiver.listener = new SAAsyncTaskReceiverInterface() {
@@ -52,7 +56,7 @@ public class SAAsyncTask {
                     }
 
                     // get persister
-                    SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
+                    SAAsyncTaskPersister persister = persisterHashMap.get(hash);
 
                     if (persister == null) {
                         Log.e("SuperAwesome", "[Fatal] Persister for AsyncTask Receiver is null. Quitting intent!");
@@ -71,7 +75,7 @@ public class SAAsyncTask {
                     }
 
                     // delete the sent perister object
-                    SAAsyncTaskPersisterStore.getInstance().persisterHashMap.remove(hash);
+                    persisterHashMap.remove(hash);
                 }
             };
 
@@ -118,7 +122,7 @@ public class SAAsyncTask {
             }
 
             // get the perister from the persister store
-            SAAsyncTaskPersister persister = SAAsyncTaskPersisterStore.getInstance().persisterHashMap.get(hash);
+            SAAsyncTaskPersister persister = persisterHashMap.get(hash);
 
             // check for
             if (persister == null) {
@@ -134,7 +138,7 @@ public class SAAsyncTask {
             }catch (Exception ignored) {}
 
             // update data in persister store
-            SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
+            persisterHashMap.put(hash, persister);
 
             // send results forward
             Bundle bundle = new Bundle();
@@ -147,30 +151,10 @@ public class SAAsyncTask {
 /**
  *
  */
-class SAAsyncTaskPersister {
+class SAAsyncTaskPersister <T> {
 
     SAAsyncTaskInterface listener = null;
-    Object result = null;
-}
-
-/**
- *
- */
-class SAAsyncTaskPersisterStore {
-
-    // internal hash map
-    HashMap<String, SAAsyncTaskPersister> persisterHashMap = new HashMap<>();
-
-    // private singleton constructor
-    private SAAsyncTaskPersisterStore() {}
-
-    // private singleton instance
-    private final static SAAsyncTaskPersisterStore instance = new SAAsyncTaskPersisterStore();
-
-    // singleton getter
-    static SAAsyncTaskPersisterStore getInstance() {
-        return instance;
-    }
+    T result = null;
 }
 
 /**

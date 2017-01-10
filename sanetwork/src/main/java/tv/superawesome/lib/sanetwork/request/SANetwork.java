@@ -16,7 +16,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -84,9 +83,18 @@ public class SANetwork {
         final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
 
         // create an async task that will run all the network code
-        SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface() {
-            @Override
-            public Object taskToExecute() throws Exception {
+        SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface <SANetworkResult> () {
+
+
+            /**
+             * This method override the "taskToExecute" method in the SAAsyncTaskInterface
+             * interface, over generic parameter "SANetworkResult"
+             *
+             * @return              returns a valid SANetworkResult object, after all the
+             *                      network operation has been completed on a secondary thread
+             * @throws Exception    a generic exception in case something went wrong
+             */
+            @Override public SANetworkResult taskToExecute() throws Exception {
 
                 int statusCode;
                 String response;
@@ -233,55 +241,41 @@ public class SANetwork {
                     conn.disconnect();
                 }
 
-                // The final response of the SAAsyncTask will be a hash map containing the
-                // current status code and any eventual payload, as a string.
-                HashMap<String, Object> networkResponse = new HashMap<>();
-                networkResponse.put("statusCode", statusCode);
-                networkResponse.put("payload", response);
-
-                // return the previous hash map
-                return networkResponse;
+                // The final response of the SAAsyncTask will be an object of type
+                // SANetworkResult that will contain the status code and the string response
+                return new SANetworkResult(statusCode, response);
             }
 
-            @Override
-            public void onFinish(Object result) {
+            /**
+             * This method overrides the standard "onFinish(T result)" method of the
+             * "SAAsyncTaskInterface" interface, over generic parameter "SANetworkResult".
+             * When this gets executed, the HTTP network operation on a secondary thread has
+             * completed.
+             *
+             * @param result    A valid SANetworkResult object
+             */
+            @Override public void onFinish(SANetworkResult result) {
 
-                Log.d("SuperAwesome", "Result is " + result);
-                if (result != null && result instanceof HashMap) {
-
-                    // get the hash map
-                    HashMap<String, Object> response = (HashMap<String, Object>)result;
-                    int status = -1;
-                    String payload = null;
-                    if (response.containsKey("statusCode")) {
-                        status = (int) response.get("statusCode");
-                    }
-                    if (response.containsKey("payload")) {
-                        payload = (String) response.get("payload");
-                    }
-
-                    // call the result
-                    if (status > -1 && payload != null) {
-                        if (listener != null) {
-                            Log.d("SuperAwesome", "[true] | HTTP " + method + " | " + status + " | " + endpoint + " ==> " + payload);
-                            listener.response(status, payload, true);
-                        }
-                    } else {
-                        if (listener != null) {
-                            Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + status + " | " + endpoint);
-                            listener.response(0, null, false);
-                        }
+                // when the whole network operation has finished, check the returned
+                // SANetworkResult object for validity and answer appropriately
+                if (result.isValid()) {
+                    if (listener != null) {
+                        Log.d("SuperAwesome", "[true] | HTTP " + method + " | " + result.getStatus() + " | " + endpoint + " ==> " + result.getPayload());
+                        listener.response(result.getStatus(), result.getPayload(), true);
                     }
                 } else {
                     if (listener != null) {
-                        Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
+                        Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + result.getPayload() + " | " + endpoint);
                         listener.response(0, null, false);
                     }
                 }
             }
 
-            @Override
-            public void onError() {
+            /**
+             * This method overrides the standard "onError()" method of the "SAAsyncTaskInterface"
+             * interface,.
+             */
+            @Override public void onError() {
                 Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
                 if (listener != null) {
                     listener.response(0, null, false);
@@ -338,5 +332,58 @@ public class SANetwork {
         } else {
             return queryString;
         }
+    }
+}
+
+/**
+ * This private class hold the important details needed when receiving a network response from
+ * a remote server: the HTTP request status (200, 201, 400, 404, etc) and a string response
+ * that will get parsed subsequently.
+ */
+class SANetworkResult {
+
+    // constants
+    private static final int DEFAULT_STATUS = -1;
+
+    // private variables - status & payload
+    private int status = DEFAULT_STATUS;
+    private String payload;
+
+    /**
+     * Custom constructor taking into account all the class members variables
+     *
+     * @param status    the current request status (200, 201, 400, 404, etc)
+     * @param payload   the current request payload. Can be null
+     */
+    SANetworkResult(int status, String payload) {
+        this.status = status;
+        this.payload = payload;
+    }
+
+    /**
+     * Public getter for the "status" member variable
+     *
+     * @return  the value of the "status" member variable
+     */
+    int getStatus() {
+        return status;
+    }
+
+    /**
+     * Public getter for the "payload" member variable
+     *
+     * @return  the value of the "payload" member variable
+     */
+    String getPayload() {
+        return payload;
+    }
+
+    /**
+     * Method that internally determines if the returned network result has validity
+     *
+     * @return  true or false depending on the condition
+     */
+    boolean isValid () {
+        return status > DEFAULT_STATUS && payload != null;
     }
 }
