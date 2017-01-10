@@ -12,22 +12,21 @@ import android.util.Log;
 import java.util.HashMap;
 import java.util.Random;
 
-// maiN async task class
+/**
+ *
+ */
 public class SAAsyncTask {
 
     // constants
-    public static final int STATUS_FINISHED = 1;
+    private static final int STATUS_FINISHED = 1;
 
-    /**
-     * Creates a new SAAsync Task
-     */
+    // constructor
     public SAAsyncTask(Context context, final SAAsyncTaskInterface listener) {
 
         //
         // Step 1: Try starting a new intent
-        Intent intent = null;
         try {
-            intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
+            Intent intent = new Intent(Intent.ACTION_SYNC, null, context, SAAsync.class);
 
             // form the unique async task hash
             String hash = "asyncTask_" + new Random().nextInt(65548);
@@ -89,7 +88,9 @@ public class SAAsyncTask {
         }
     }
 
-    // the actual intent service
+    /**
+     *
+     */
     public static class SAAsync extends IntentService {
 
         public SAAsync() {
@@ -132,10 +133,10 @@ public class SAAsyncTask {
                 }
             }catch (Exception ignored) {}
 
-            /** update data in persister store */
+            // update data in persister store
             SAAsyncTaskPersisterStore.getInstance().persisterHashMap.put(hash, persister);
 
-            /** send results forward */
+            // send results forward
             Bundle bundle = new Bundle();
             bundle.putString("hash", hash);
             receiver.send(STATUS_FINISHED, bundle);
@@ -143,18 +144,22 @@ public class SAAsyncTask {
     }
 }
 
-// persister object
+/**
+ *
+ */
 class SAAsyncTaskPersister {
 
-    public SAAsyncTaskInterface listener = null;
-    public Object result = null;
+    SAAsyncTaskInterface listener = null;
+    Object result = null;
 }
 
-// singleton persister - because f!
+/**
+ *
+ */
 class SAAsyncTaskPersisterStore {
 
     // internal hash map
-    public HashMap<String, SAAsyncTaskPersister> persisterHashMap = new HashMap<>();
+    HashMap<String, SAAsyncTaskPersister> persisterHashMap = new HashMap<>();
 
     // private singleton constructor
     private SAAsyncTaskPersisterStore() {}
@@ -163,20 +168,22 @@ class SAAsyncTaskPersisterStore {
     private final static SAAsyncTaskPersisterStore instance = new SAAsyncTaskPersisterStore();
 
     // singleton getter
-    public static SAAsyncTaskPersisterStore getInstance() {
+    static SAAsyncTaskPersisterStore getInstance() {
         return instance;
     }
 }
 
+/**
+ *
+ */
 @SuppressLint("ParcelCreator")
-// standard receiver
 class SAAsyncTaskReceiver extends ResultReceiver {
 
     // private listener
-    public SAAsyncTaskReceiverInterface listener;
+    SAAsyncTaskReceiverInterface listener;
 
     // private constructor
-    public SAAsyncTaskReceiver(Handler handler) {
+    SAAsyncTaskReceiver(Handler handler) {
         super(handler);
     }
 
@@ -189,7 +196,9 @@ class SAAsyncTaskReceiver extends ResultReceiver {
     }
 }
 
-// interface for the receiver
+/**
+ *
+ */
 interface SAAsyncTaskReceiverInterface {
     void onReceiveResult(int resultCode, Bundle resultData);
 }

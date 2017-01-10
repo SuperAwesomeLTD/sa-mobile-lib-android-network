@@ -1,18 +1,21 @@
+/**
+ * Copyright:   SuperAwesome Trading Limited 2017
+ * Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
+ */
 package tv.superawesome.lib.sanetwork.request;
 
 /**
- * This is a listener interface for SAGet and SAPost async task classes
+ * Interface that is used by SANetwork to send a callback when an async network operation
+ * finishes.
  */
 public interface SANetworkInterface {
 
     /**
-     * This function should be called in case of Async operation response, and should
-     * always return an anonymous data object
+     * Interface method that gets called as a callback response to an async network operation
      *
-     * @param status - the status of the call
-     * @param payload - is a callback parameter; to be accessed by the class that implements
-     * @param success - a boolean that tells whether the request is a success or not
-     * this Listener interface
+     * @param status    the HTTP status of the network call
+     * @param payload   the payload of the network operation, as a String parameter
+     * @param success   whether the operation was successful or not
      */
-    void response(int status, String payload, boolean success);
+    void response (int status, String payload, boolean success);
 }

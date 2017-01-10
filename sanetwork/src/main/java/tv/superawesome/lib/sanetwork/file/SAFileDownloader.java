@@ -16,9 +16,6 @@ import java.util.Set;
 import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTask;
 import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTaskInterface;
 
-/**
- * Created by gabriel.coman on 03/10/16.
- */
 public class SAFileDownloader {
 
     // constants
