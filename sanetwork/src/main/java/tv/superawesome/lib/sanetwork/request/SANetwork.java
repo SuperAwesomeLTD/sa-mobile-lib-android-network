@@ -83,18 +83,19 @@ public class SANetwork {
         final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
 
         // create an async task that will run all the network code
-        SAAsyncTask task = new SAAsyncTask(context, new SAAsyncTaskInterface <SANetworkResult> () {
+        new SAAsyncTask<>(context, new SAAsyncTaskInterface<SANetworkResult>() {
 
 
             /**
              * This method override the "taskToExecute" method in the SAAsyncTaskInterface
              * interface, over generic parameter "SANetworkResult"
              *
-             * @return              returns a valid SANetworkResult object, after all the
-             *                      network operation has been completed on a secondary thread
-             * @throws Exception    a generic exception in case something went wrong
+             * @return returns a valid SANetworkResult object, after all the
+             * network operation has been completed on a secondary thread
+             * @throws Exception a generic exception in case something went wrong
              */
-            @Override public SANetworkResult taskToExecute() throws Exception {
+            @Override
+            public SANetworkResult taskToExecute() throws Exception {
 
                 int statusCode;
                 String response;
@@ -112,7 +113,7 @@ public class SANetwork {
                 if (proto.equals("https")) {
 
                     // create a new HTTPS Connection
-                    HttpsURLConnection conn = (HttpsURLConnection)Url.openConnection();
+                    HttpsURLConnection conn = (HttpsURLConnection) Url.openConnection();
 
                     // set connection parameters
                     conn.setReadTimeout(15000);
@@ -149,7 +150,7 @@ public class SANetwork {
                     // read the result
                     // error cases are based on HTTP status codes greater than 400
                     statusCode = conn.getResponseCode();
-                    if(statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
+                    if (statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
                         in = new InputStreamReader(conn.getErrorStream());
                     } else {
                         in = new InputStreamReader(conn.getInputStream());
@@ -160,7 +161,7 @@ public class SANetwork {
                     response = "";
                     BufferedReader reader = new BufferedReader(in);
                     while ((line = reader.readLine()) != null) {
-                        response+=line;
+                        response += line;
                     }
 
                     // close the body writer
@@ -178,7 +179,7 @@ public class SANetwork {
                 // Case 2: Protocol is hopefully HTTP (or any other, in a worse case scenario)
                 else {
                     // create a new HTTPS Connection
-                    HttpURLConnection conn = (HttpURLConnection)Url.openConnection();
+                    HttpURLConnection conn = (HttpURLConnection) Url.openConnection();
 
                     // set connection parameters
                     conn.setReadTimeout(15000);
@@ -215,7 +216,7 @@ public class SANetwork {
                     // read the result
                     // error cases are based on HTTP status codes greater than 400
                     statusCode = conn.getResponseCode();
-                    if(statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
+                    if (statusCode >= HttpsURLConnection.HTTP_BAD_REQUEST) {
                         in = new InputStreamReader(conn.getErrorStream());
                     } else {
                         in = new InputStreamReader(conn.getInputStream());
@@ -226,7 +227,7 @@ public class SANetwork {
                     response = "";
                     BufferedReader reader = new BufferedReader(in);
                     while ((line = reader.readLine()) != null) {
-                        response+=line;
+                        response += line;
                     }
 
                     // close the body writer
@@ -252,9 +253,10 @@ public class SANetwork {
              * When this gets executed, the HTTP network operation on a secondary thread has
              * completed.
              *
-             * @param result    A valid SANetworkResult object
+             * @param result A valid SANetworkResult object
              */
-            @Override public void onFinish(SANetworkResult result) {
+            @Override
+            public void onFinish(SANetworkResult result) {
 
                 // when the whole network operation has finished, check the returned
                 // SANetworkResult object for validity and answer appropriately
@@ -275,7 +277,8 @@ public class SANetwork {
              * This method overrides the standard "onError()" method of the "SAAsyncTaskInterface"
              * interface,.
              */
-            @Override public void onError() {
+            @Override
+            public void onError() {
                 Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
                 if (listener != null) {
                     listener.response(0, null, false);

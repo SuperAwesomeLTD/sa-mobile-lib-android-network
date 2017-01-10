@@ -1,12 +1,21 @@
+/**
+ * Copyright:   SuperAwesome Trading Limited 2017
+ * Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
+ */
 package tv.superawesome.lib.sanetwork.file;
 
 /**
- * Created by gabriel.coman on 17/05/16.
+ * This interface is used by the file downloader to signal to the main thread that a file has
+ * just been downloaded.
  */
 public interface SAFileDownloaderInterface {
 
     /**
-     * Function that signals finish
+     * The interface's only method - that contains two callback parameters, indicating success
+     * and the location on the disk where the file has been downloader
+     *
+     * @param success   Whether the network operation to get the file was a success
+     * @param diskUrl   The Disk URL of the recently downloaded file
      */
     void response(boolean success, String diskUrl);
 
