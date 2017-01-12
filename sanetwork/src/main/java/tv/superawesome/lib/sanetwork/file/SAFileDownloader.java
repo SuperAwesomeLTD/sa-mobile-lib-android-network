@@ -1,6 +1,6 @@
 /**
- * Copyright:   SuperAwesome Trading Limited 2017
- * Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
+ * @Copyright:   SuperAwesome Trading Limited 2017
+ * @Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
  */
 package tv.superawesome.lib.sanetwork.file;
 
@@ -32,8 +32,8 @@ public class SAFileDownloader {
     private final String PREFERENCES = "MyPreferences";
 
     // private members needed to download a file
-    private SADownloadQueue queue = new SADownloadQueue();
-    private SADownloadItem currentItem = null;
+    private SAFileQueue queue = new SAFileQueue();
+    private SAFileItem currentItem = null;
     private boolean isDownloaderBusy = false;
     private boolean cleanupOnce = false;
     private boolean printStart = false;
@@ -85,8 +85,8 @@ public class SAFileDownloader {
 
             Log.d("SuperAwesome", "URL already exists in queue: " + url);
 
-            // get the corresponding SADownloadItem for the URL (which is the queue key)
-            SADownloadItem item = queue.itemForURL(url);
+            // get the corresponding SAFileItem for the URL (which is the queue key)
+            SAFileItem item = queue.itemForURL(url);
 
             // check if it's already on disk
             boolean isOnDisk = item != null && item.isOnDisk();
@@ -111,7 +111,7 @@ public class SAFileDownloader {
         else {
 
             // create a new download item
-            SADownloadItem item = new SADownloadItem(url, listener);
+            SAFileItem item = new SAFileItem(url, listener);
 
             // if the new item is valid (e.g. valid url, disk path, key, etc)
             // then proceed with the operation

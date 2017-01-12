@@ -1,6 +1,6 @@
 /**
- * Copyright:   SuperAwesome Trading Limited 2017
- * Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
+ * @Copyright:   SuperAwesome Trading Limited 2017
+ * @Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
  */
 package tv.superawesome.lib.sanetwork.file;
 
@@ -16,7 +16,7 @@ import java.util.Random;
  *  downloaded (by using a List of SAFileDownloaderInterfaces to keep a track of who needs to be
  *  notified)
  */
-public class SADownloadItem {
+public class SAFileItem {
 
     // private constants
     private static final String SA_KEY_PREFIX = "sasdkkey_";
@@ -34,7 +34,7 @@ public class SADownloadItem {
     /**
      * Empty Item constructor
      */
-    public SADownloadItem () {
+    public SAFileItem() {
         // do nothing
     }
 
@@ -44,7 +44,7 @@ public class SADownloadItem {
      *
      * @param url   a remote resource URL
      */
-    public SADownloadItem (String url) {
+    public SAFileItem(String url) {
         // get the URL Key
         urlKey = url;
 
@@ -64,7 +64,7 @@ public class SADownloadItem {
      * @param url           a remote resource URL
      * @param firstListener a first listener used for callback
      */
-    public SADownloadItem (String url, SAFileDownloaderInterface firstListener) {
+    public SAFileItem(String url, SAFileDownloaderInterface firstListener) {
         // call URL constructor
         this (url);
 

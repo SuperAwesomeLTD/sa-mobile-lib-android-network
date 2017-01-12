@@ -1,6 +1,6 @@
 /**
- * Copyright:   SuperAwesome Trading Limited 2017
- * Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
+ * @Copyright:   SuperAwesome Trading Limited 2017
+ * @Author:      Gabriel Coman (gabriel.coman@superawesome.tv)
  */
 package tv.superawesome.lib.sanetwork.file;
 
@@ -8,20 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class operates on a list of SADownloadItem objects and acts as a queue with
+ * This class operates on a list of SAFileItem objects and acts as a queue with
  * limited functionality
  */
-public class SADownloadQueue {
+public class SAFileQueue {
 
     // the private list of SADownloadItems
-    private List<SADownloadItem> queue = new ArrayList<>();
+    private List<SAFileItem> queue = new ArrayList<>();
 
     /**
      * This method adds another item to the queue
      *
      * @param item a new item that's going to be checked for nullness
      */
-    public void addToQueue (SADownloadItem item) {
+    public void addToQueue (SAFileItem item) {
         if (item != null) {
             queue.add(item);
         }
@@ -32,7 +32,7 @@ public class SADownloadQueue {
      *
      * @param item the item that's going to be removed; checked for nullness
      */
-    public void removeFromQueue (SADownloadItem item) {
+    public void removeFromQueue (SAFileItem item) {
         if (item != null) {
             queue.remove(item);
         }
@@ -44,13 +44,13 @@ public class SADownloadQueue {
      *
      * @param item the item that's going to be moved to the back
      */
-    public void moveToBackOfQueue (SADownloadItem item) {
+    public void moveToBackOfQueue (SAFileItem item) {
         removeFromQueue(item);
         addToQueue(item);
     }
 
     /**
-     * Specific method that checks if there is at least one SADownloadItem element in the
+     * Specific method that checks if there is at least one SAFileItem element in the
      * queue that corresponds to the url given as paramter
      *
      * @param url   given URL parameter
@@ -58,7 +58,7 @@ public class SADownloadQueue {
      */
     public boolean hasItemForURL (String url) {
 
-        for (SADownloadItem item : queue) {
+        for (SAFileItem item : queue) {
             if (item.getUrlKey().equals(url)) {
                 return true;
             }
@@ -68,14 +68,14 @@ public class SADownloadQueue {
     }
 
     /**
-     * Method that returns the SADownloadItem specific for a given url
+     * Method that returns the SAFileItem specific for a given url
      *
      * @param url   given URL parameter
      * @return      return the item or null
      */
-    public SADownloadItem itemForURL (String url) {
+    public SAFileItem itemForURL (String url) {
 
-        for (SADownloadItem item : queue) {
+        for (SAFileItem item : queue) {
             if (item.getUrlKey().equals(url)) {
                 return item;
             }
@@ -89,9 +89,9 @@ public class SADownloadQueue {
      *
      * @return  the next item or null, if none was found
      */
-    public SADownloadItem getNext () {
+    public SAFileItem getNext () {
 
-        for (SADownloadItem item : queue) {
+        for (SAFileItem item : queue) {
             if (!item.isOnDisk()) {
                 return item;
             }
