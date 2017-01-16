@@ -11,11 +11,11 @@ package tv.superawesome.lib.sanetwork.request;
 public interface SANetworkInterface {
 
     /**
-     * Interface method that gets called as a callback response to an async network operation
+     * Interface method that gets called as a callback saDidGetResponse to an async network operation
      *
      * @param status    the HTTP status of the network call
      * @param payload   the payload of the network operation, as a String parameter
      * @param success   whether the operation was successful or not
      */
-    void response (int status, String payload, boolean success);
+    void saDidGetResponse(int status, String payload, boolean success);
 }

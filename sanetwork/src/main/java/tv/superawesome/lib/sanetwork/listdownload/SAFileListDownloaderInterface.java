@@ -17,6 +17,6 @@ public interface SAFileListDownloaderInterface {
      *
      * @param diskLocations a List of disk locations, in the order they were downloaded
      */
-    void didGetAllFiles (List<String> diskLocations);
+    void saDidDownloadFilesInList(List<String> diskLocations);
 
 }

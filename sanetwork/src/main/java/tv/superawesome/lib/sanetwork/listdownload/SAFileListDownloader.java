@@ -9,7 +9,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import tv.superawesome.lib.sanetwork.file.SAFileDownloader;
@@ -23,9 +22,6 @@ public class SAFileListDownloader {
     // copy of the context
     private Context context = null;
 
-    // the final file list that will get returned
-    private List<String> finalFileList = new ArrayList<>();
-
     // copy of a SAFileListDownloaderInterface implementation to be able to return a callback
     // to library users
     private SAFileListDownloaderInterface listener = null;
@@ -38,7 +34,7 @@ public class SAFileListDownloader {
      */
     public SAFileListDownloader(Context context) {
         this.context = context;
-        this.listener = new SAFileListDownloaderInterface() {@Override public void didGetAllFiles(List<String> diskLocations) {}};
+        this.listener = new SAFileListDownloaderInterface() {@Override public void saDidDownloadFilesInList(List<String> diskLocations) {}};
     }
 
     /**
@@ -70,10 +66,11 @@ public class SAFileListDownloader {
                  * new disk url
                  *
                  * @param index     the order the file has been downloaded by SAFileDownloader
+                 * @param success   Whether the network operation to get the file was a success
                  * @param diskUrl   the new disk url
                  */
                 @Override
-                public void didDownloadFile(int index, String diskUrl) {
+                public void didDownloadFileAtIndex(int index, boolean success, String diskUrl) {
 
                     Log.d("SuperAwesome", "List file at original index: " + finalI + " got put on " + index + " with Disk Url:  " + diskUrl);
 
@@ -96,7 +93,7 @@ public class SAFileListDownloader {
                         }
 
                         // call to the final listener
-                        SAFileListDownloader.this.listener.didGetAllFiles(finalFiles);
+                        SAFileListDownloader.this.listener.saDidDownloadFilesInList(finalFiles);
                     }
 
                 }
@@ -120,10 +117,10 @@ public class SAFileListDownloader {
 
         SAFileDownloader.getInstance().downloadFileFrom(context, file, new SAFileDownloaderInterface() {
             @Override
-            public void response(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String diskUrl) {
 
                 // call on this
-                listener.didDownloadFile(i, diskUrl);
+                listener.didDownloadFileAtIndex(i, success, diskUrl);
 
             }
         });
@@ -188,7 +185,8 @@ interface SAFileListItemInterface {
      * Method to implement in the interface
      *
      * @param index     an index to send back
+     * @param success   Whether the network operation to get the file was a success
      * @param diskUrl   a disk url after the file has been downloaded
      */
-    void didDownloadFile (int index, String diskUrl);
+    void didDownloadFileAtIndex(int index, boolean success, String diskUrl);
 }

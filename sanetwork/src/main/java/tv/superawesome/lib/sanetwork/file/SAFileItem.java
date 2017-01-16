@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * This class represents a single Download Item - an object that tries to group two pieces of
+ * This class represents a single File Item - an object that tries to group two pieces of
  * information:
  *  - the details of where a file is downloaded (and if it has been successfully downloaded)
  *  - all the possible 3rd parties that would be interested in knowing if the file has been
@@ -68,7 +68,7 @@ public class SAFileItem {
         // call URL constructor
         this (url);
 
-        // add response
+        // add saDidGetResponse
         addResponse(firstListener);
     }
 
@@ -97,7 +97,7 @@ public class SAFileItem {
     }
 
     /**
-     * Add a new response to the responses array (if not null)
+     * Add a new saDidGetResponse to the responses array (if not null)
      *
      * @param listener add a new listener for callback, only if its non-null
      */
@@ -119,8 +119,8 @@ public class SAFileItem {
     /**
      * Get the file extension from a file name
      *
-     * @param fileName a valid, hopefully not-null filename
-     * @return the 3-4 letter extension of the file
+     * @param fileName  a valid, hopefully not-null filename
+     * @return          the 3-4 letter extension of the file
      */
     private String getFileExt(String fileName) {
         if (fileName != null && !fileName.isEmpty()) {
@@ -133,8 +133,8 @@ public class SAFileItem {
     /**
      * Generate a new disk name based on an url's extension
      *
-     * @param url url to pass to get the extension from
-     * @return a new disk name
+     * @param url   url to pass to get the extension from
+     * @return      a new disk name
      */
     private String getNewDiskName(String url) {
         if (url != null && !url.isEmpty()) {

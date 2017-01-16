@@ -62,7 +62,7 @@ public class SANetwork {
      * sendGET, etc, will be presented as public.
      *
      * @param context   the current context (an Activity or Fragment, etc)
-     * @param url       URL to send the request to
+     * @param endpoint  URL to send the request to
      * @param method    the HTTP method to be executed, as a string. Based on the methods possible
      *                  with the HttpsURLConnection class (OPTIONS, GET, HEAD, POST, PUT,
      *                  DELETE and TRACE)
@@ -75,12 +75,12 @@ public class SANetwork {
      * @param listener  a listener of type SANetworkInterface to be used as a callback mechanism
      *                  when the network operation finally succeeds
      */
-    private void sendRequest(Context context, String url, final String method, JSONObject query, final JSONObject header, final JSONObject body, final SANetworkInterface listener) {
+    private void sendRequest(Context context, String endpoint, final String method, JSONObject query, final JSONObject header, final JSONObject body, final SANetworkInterface listener) {
 
         // create the final endpoint to hit
         // it will be formed by taking the original URL that's being passed and any existing
         // query parameters (from the "query" JSONObject method parameter)
-        final String endpoint = url + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
+        final String finalEndpoint = endpoint + (!isJSONEmpty(query) ? "?" + formGetQueryFromDict(query) : "");
 
         // create an async task that will run all the network code
         new SAAsyncTask<>(context, new SAAsyncTaskInterface<SANetworkResult>() {
@@ -103,7 +103,7 @@ public class SANetwork {
                 OutputStream os = null;
 
                 // create a new URL object from the final endpoint that's being supplied
-                URL Url = new URL(endpoint);
+                URL Url = new URL(finalEndpoint);
 
                 // ang get the protocol (hopefully it being HTTPS or HTTP)
                 String proto = Url.getProtocol();
@@ -156,7 +156,7 @@ public class SANetwork {
                         in = new InputStreamReader(conn.getInputStream());
                     }
 
-                    // read the response from the server
+                    // read the saDidGetResponse from the server
                     String line;
                     response = "";
                     BufferedReader reader = new BufferedReader(in);
@@ -222,7 +222,7 @@ public class SANetwork {
                         in = new InputStreamReader(conn.getInputStream());
                     }
 
-                    // read the response from the server
+                    // read the saDidGetResponse from the server
                     String line;
                     response = "";
                     BufferedReader reader = new BufferedReader(in);
@@ -242,8 +242,8 @@ public class SANetwork {
                     conn.disconnect();
                 }
 
-                // The final response of the SAAsyncTask will be an object of type
-                // SANetworkResult that will contain the status code and the string response
+                // The final saDidGetResponse of the SAAsyncTask will be an object of type
+                // SANetworkResult that will contain the status code and the string saDidGetResponse
                 return new SANetworkResult(statusCode, response);
             }
 
@@ -262,13 +262,13 @@ public class SANetwork {
                 // SANetworkResult object for validity and answer appropriately
                 if (result.isValid()) {
                     if (listener != null) {
-                        Log.d("SuperAwesome", "[true] | HTTP " + method + " | " + result.getStatus() + " | " + endpoint + " ==> " + result.getPayload());
-                        listener.response(result.getStatus(), result.getPayload(), true);
+                        Log.d("SuperAwesome", "[true] | HTTP " + method + " | " + result.getStatus() + " | " + finalEndpoint + " ==> " + result.getPayload());
+                        listener.saDidGetResponse(result.getStatus(), result.getPayload(), true);
                     }
                 } else {
                     if (listener != null) {
-                        Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + result.getPayload() + " | " + endpoint);
-                        listener.response(0, null, false);
+                        Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + result.getPayload() + " | " + finalEndpoint);
+                        listener.saDidGetResponse(0, null, false);
                     }
                 }
             }
@@ -279,9 +279,9 @@ public class SANetwork {
              */
             @Override
             public void onError() {
-                Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + endpoint);
+                Log.d("SuperAwesome", "[false] | HTTP " + method + " | " + 0 + " | " + finalEndpoint);
                 if (listener != null) {
-                    listener.response(0, null, false);
+                    listener.saDidGetResponse(0, null, false);
                 }
             }
         });
@@ -339,8 +339,8 @@ public class SANetwork {
 }
 
 /**
- * This private class hold the important details needed when receiving a network response from
- * a remote server: the HTTP request status (200, 201, 400, 404, etc) and a string response
+ * This private class hold the important details needed when receiving a network saDidGetResponse from
+ * a remote server: the HTTP request status (200, 201, 400, 404, etc) and a string saDidGetResponse
  * that will get parsed subsequently.
  */
 class SANetworkResult {

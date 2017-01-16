@@ -66,11 +66,11 @@ public class SAFileDownloader {
     public void downloadFileFrom(Context context, String url, SAFileDownloaderInterface listener1) {
 
         // get a local copy of the listener
-        final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void response(boolean success, String diskUrl) {}};
+        final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void saDidDownloadFile(boolean success, String diskUrl) {}};
 
         // check for null context
         if (context == null) {
-            listener.response(false, null);
+            listener.saDidDownloadFile(false, null);
             return;
         }
 
@@ -93,9 +93,9 @@ public class SAFileDownloader {
 
             // if the file is already on disk, just use the listener to respond with a
             // successful callback (and thus save precious band with and speed up SDK
-            // response times)
+            // saDidGetResponse times)
             if (isOnDisk) {
-                listener.response(true, item.getDiskUrl());
+                listener.saDidDownloadFile(true, item.getDiskUrl());
             }
             // if file not already downloaded, add the current listener to the download item,
             // so that when it does finish downloading, this listener also gets a
@@ -128,7 +128,7 @@ public class SAFileDownloader {
             else {
                 Log.d("SuperAwesome", "Not adding new URL to queue: " + url + " because it's not valid");
 
-                listener.response(false, null);
+                listener.saDidDownloadFile(false, null);
             }
         }
     }
@@ -276,11 +276,11 @@ public class SAFileDownloader {
                                 SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
                                 preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).apply();
 
-                                // send response to all of the listeners in the current item,
+                                // send saDidGetResponse to all of the listeners in the current item,
                                 // so that all class users who wanted to download the same file
-                                // now get their response
+                                // now get their saDidGetResponse
                                 for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                                    listener.response(true, currentItem.getDiskUrl());
+                                    listener.saDidDownloadFile(true, currentItem.getDiskUrl());
                                 }
 
                                 // set on disk
@@ -340,7 +340,7 @@ public class SAFileDownloader {
                     // every class user who wanted to download this file knows there's a
                     // problem
                     for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                        listener.response(false, null);
+                        listener.saDidDownloadFile(false, null);
                     }
 
                     // clear responses
