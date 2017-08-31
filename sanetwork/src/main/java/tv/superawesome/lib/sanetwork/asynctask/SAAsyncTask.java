@@ -70,6 +70,11 @@ public class SAAsyncTask <T> {
                 @Override
                 protected void onReceiveResult(int resultCode, Bundle resultData) {
 
+                    if (resultData == null) {
+                        Log.e("SuperAwesome", "[Fatal] Result Data for Async task is null!");
+                        return;
+                    }
+
                     // get the hash
                     String hash = resultData.getString(INTENT_HASH_KEY);
 
@@ -93,7 +98,11 @@ public class SAAsyncTask <T> {
                     if (resultCode == STATUS_FINISHED) {
                         if (persister.listener != null) {
                             if (persister.result != null) {
-                                persister.listener.onFinish(persister.result);
+                                try {
+                                    persister.listener.onFinish(persister.result);
+                                } catch (Exception e) {
+                                    // abc
+                                }
                             } else {
                                 persister.listener.onError();
                             }
@@ -141,6 +150,11 @@ public class SAAsyncTask <T> {
          */
         @Override
         protected void onHandleIntent(Intent intent) {
+            if (intent == null) {
+                Log.e("SuperAwesome", "[Fatal] Intent null for some reason! Quitting!");
+                return;
+            }
+
             // get receiver
             ResultReceiver receiver = intent.getParcelableExtra(INTENT_RECEIVER_KEY);
 
