@@ -5,3 +5,4 @@ local.properties
 sanetwork/java_pid*
 java_pid*
 app/java_pid*
+.idea/
