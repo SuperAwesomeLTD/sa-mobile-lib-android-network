@@ -4,9 +4,6 @@
  */
 package tv.superawesome.lib.sanetwork.request;
 
-import android.content.Context;
-import android.util.Log;
-
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
@@ -15,7 +12,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

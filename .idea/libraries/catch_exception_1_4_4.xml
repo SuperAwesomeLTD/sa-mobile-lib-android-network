@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="catch-exception-1.4.4">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/eu.codearte.catch-exception/catch-exception/1.4.4/c54da7072e0ccaf1fb92118e5e6e24335039006e/catch-exception-1.4.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/eu.codearte.catch-exception/catch-exception/1.4.4/1495724b4f2d9121c9ea363ad1e1dba7fa2d4102/catch-exception-1.4.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
