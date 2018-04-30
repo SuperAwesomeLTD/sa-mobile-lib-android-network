@@ -14,9 +14,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
-import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTask;
-import tv.superawesome.lib.sanetwork.asynctask.SAAsyncTaskInterface;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * This class abstracts away the details of downloading files through a queue.
@@ -45,12 +44,29 @@ public class SAFileDownloader {
     // Singleton instance
     private static SAFileDownloader instance = new SAFileDownloader();
 
+    // Executor
+    private int timeout = 15000;
+    private boolean isDebug = false;
+    private Executor executor = Executors.newSingleThreadExecutor();
+
     /**
      * Main singleton instance accessor method
      *
      * @return  the only instance of the SAFileDownloader object
      */
     public static SAFileDownloader getInstance() {
+        return instance;
+    }
+
+    /**
+     * Other singleton, with an executor passes as param
+     * @param executor executor to override
+     * @return the only instance of the SAFileDownloader object
+     */
+    public static SAFileDownloader getInstance(Executor executor, boolean isDebug, int timeout) {
+        instance.executor = executor;
+        instance.isDebug = isDebug;
+        instance.timeout = timeout;
         return instance;
     }
 
@@ -75,15 +91,13 @@ public class SAFileDownloader {
         }
 
         // cleanup the disk cache once!
-        if (!cleanupOnce) {
+        if (!cleanupOnce && !isDebug) {
             cleanupOnce = true;
             cleanup(context);
         }
 
         // if File is already in queue
         if (queue.hasItemForURL(url)) {
-
-            Log.d("SuperAwesome", "URL already exists in queue: " + url);
 
             // get the corresponding SAFileItem for the URL (which is the queue key)
             SAFileItem item = queue.itemForURL(url);
@@ -116,8 +130,6 @@ public class SAFileDownloader {
             // if the new item is valid (e.g. valid url, disk path, key, etc)
             // then proceed with the operation
             if (item.isValid()) {
-                Log.d("SuperAwesome", "Adding new URL to queue: " + url);
-
                 // add the item to the queue
                 queue.addToQueue(item);
 
@@ -126,8 +138,6 @@ public class SAFileDownloader {
             }
             // if it's not ok (e.g. invalid url) then use the listener to send an error callback
             else {
-                Log.d("SuperAwesome", "Not adding new URL to queue: " + url + " because it's not valid");
-
                 listener.saDidDownloadFile(false, null);
             }
         }
@@ -157,25 +167,13 @@ public class SAFileDownloader {
                 // with trying to download it
                 if (currentItem.hasRetriesRemaining()) {
 
-                    Log.d("SuperAwesome", "Start work on queue for " + currentItem.getDiskUrl() + " Try " + (currentItem.getNrRetries() + 1) + " / 3");
-
                     // reset these state vars to handle state
                     isDownloaderBusy = true;
                     printStart = printQuarter = printMid = printThird = printFull = false;
 
-                    new SAAsyncTask<>(context, new SAAsyncTaskInterface<Boolean>() {
-                        /**
-                         * Override of the SAASyncTaks "taskToExecute" method over a Boolean
-                         * generic parameter.
-                         *
-                         * @return              It will try to return either true or false,
-                         *                      depending on the success of the file download
-                         *                      operation.
-                         * @throws Exception    In case of majore error it will throw a type of
-                         *                      exception
-                         */
+                    executor.execute(new Runnable() {
                         @Override
-                        public Boolean taskToExecute() throws Exception {
+                        public void run() {
 
                             // get the disk URL and unique URL Key
                             String filename = currentItem.getDiskUrl();
@@ -193,12 +191,14 @@ public class SAFileDownloader {
                                 // start a new Http connection)
                                 URL url = new URL(videoUrl);
                                 connection = (HttpURLConnection) url.openConnection();
+                                connection.setReadTimeout(timeout);
+                                connection.setConnectTimeout(timeout);
                                 connection.connect();
 
                                 int statusCode = connection.getResponseCode();
 
                                 // exception code != 200
-                                if (statusCode != HttpURLConnection.HTTP_OK) return null;
+                                if (statusCode != HttpURLConnection.HTTP_OK) return;
 
                                 // get input stream and start writing to disk
                                 input = connection.getInputStream();
@@ -208,34 +208,8 @@ public class SAFileDownloader {
 
                                 // start the file download operation
                                 byte data[] = new byte[4096];
-                                long total = 0;
                                 int count;
                                 while ((count = input.read(data)) != -1) {
-                                    total += count;
-
-                                    // print operation (only for logging purposes)
-                                    int percent = (int) ((total / (float) file_size) * 100);
-                                    if (percent >= 0 && !printStart) {
-                                        printStart = true;
-                                        Log.d("SuperAwesome", "Wrote " + percent + " %");
-                                    }
-                                    if (percent >= 25 && !printQuarter) {
-                                        printQuarter = true;
-                                        Log.d("SuperAwesome", "Wrote " + percent + " %");
-                                    }
-                                    if (percent >= 50 && !printMid) {
-                                        printMid = true;
-                                        Log.d("SuperAwesome", "Wrote " + percent + " %");
-                                    }
-                                    if (percent >= 75 && !printThird) {
-                                        printThird = true;
-                                        Log.d("SuperAwesome", "Wrote " + percent + " %");
-                                    }
-                                    if (percent >= 100 && !printFull) {
-                                        printFull = true;
-                                        Log.d("SuperAwesome", "Wrote " + percent + " %");
-                                    }
-
                                     // actually write the data to the disk
                                     output.write(data, 0, count);
                                 }
@@ -255,26 +229,11 @@ public class SAFileDownloader {
                             // disconnect
                             if (connection != null) connection.disconnect();
 
-                            // return
-                            return success;
-                        }
-
-                        /**
-                         * Overridden "onFinish" method of the SAAsyncTaskInterface interface.
-                         *
-                         * @param result    a Boolean indicating whether the network op is a
-                         *                  success or not
-                         */
-                        @Override
-                        public void onFinish(Boolean result) {
-
-                            if (result) {
-
-                                Log.d("SuperAwesome", "Downloaded " + currentItem.getUrlKey() + " ==> " + currentItem.getDiskUrl());
+                            if (success) {
 
                                 // put data in the editor
                                 SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-                                preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).apply();
+                                preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).commit();
 
                                 // send saDidGetResponse to all of the listeners in the current item,
                                 // so that all class users who wanted to download the same file
@@ -303,32 +262,9 @@ public class SAFileDownloader {
                                 queue.moveToBackOfQueue(currentItem);
                                 checkOnQueue(context);
                             }
-                        }
 
-                        /**
-                         * Overridden "onError" method of the SAFileDownloaderInterface interface
-                         * that will handle what happens in an error case
-                         *
-                         */
-                        @Override
-                        public void onError() {
-                            // downloader isn't busy anymore
-                            isDownloaderBusy = false;
-
-                            // increment the nr of retries the downloader can do for this file
-                            currentItem.incrementNrRetries();
-
-                            // reset the "isOnDisk" boolean; it's still not OK
-                            currentItem.setOnDisk(false);
-
-                            // move the current item to the back of the queue
-                            queue.moveToBackOfQueue(currentItem);
-
-                            // continue recursing through the queue
-                            checkOnQueue(context);
                         }
                     });
-
                 }
                 //
                 // Case 2:
@@ -382,11 +318,6 @@ public class SAFileDownloader {
                     boolean hasBeenDeleted = false;
                     if (file.exists()) {
                         hasBeenDeleted = file.delete();
-                    }
-                    if (hasBeenDeleted) {
-                        Log.d("SuperAwesome", "[true] | DEL | " + fullPath);
-                    } else {
-                        Log.d("SuperAwesome", "[false] | DEL | " + fullPath);
                     }
 
                     // remove the key from the shared preferences as well

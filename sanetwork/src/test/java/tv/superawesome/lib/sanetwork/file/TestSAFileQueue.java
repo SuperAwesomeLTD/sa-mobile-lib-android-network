@@ -1,58 +1,59 @@
-package superawesome.tv.sanetworktester;
+package tv.superawesome.lib.sanetwork.file;
 
-import android.app.Application;
-import android.test.ApplicationTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
 
-import tv.superawesome.lib.sanetwork.file.SAFileItem;
-import tv.superawesome.lib.sanetwork.file.SAFileQueue;
+import org.junit.Test;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
- * Created by gabriel.coman on 20/10/16.
+ * Created by gabriel.coman on 30/04/2018.
  */
-public class SANetwork_DownloadQueue_Tests extends ApplicationTestCase<Application> {
-    public SANetwork_DownloadQueue_Tests() {
-        super(Application.class);
-    }
 
-    @SmallTest
-    public void testDefault () {
+public class TestSAFileQueue {
+
+    @Test
+    public void test_SAFileQueue_WithNoNextItem () {
         // given
-        SAFileQueue queue = new SAFileQueue();
+        SAFileItem expectedNext = null;
 
         // when
+        SAFileQueue queue = new SAFileQueue();
         int expectedLength = 0;
-        SAFileItem expectedNext = null;
 
         // then
         int length = queue.getLength();
         SAFileItem next = queue.getNext();
 
-        // assert
         assertNotNull(queue);
         assertEquals(length, expectedLength);
         assertEquals(next, expectedNext);
     }
 
-    @SmallTest
-    public void testComplex () {
+    @Test
+    public void test_SAFileQueue_WithMultipleItems () {
         // given
-        SAFileQueue queue = new SAFileQueue();
-
-        // then
         String url1 = "https://sa-beta-ads-video-transcoded-superawesome.netdna-ssl.com/5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4";
         String url2 = "https://s3-eu-west-1.amazonaws.com/sb-ads-uploads/images/VNyy2KSeGrvC0eO7DDOxMfWm2GQKuJ6X.png";
 
         SAFileItem item1 = new SAFileItem(url1);
         SAFileItem item2 = new SAFileItem(url2);
 
+
+        // when
+        SAFileQueue queue = new SAFileQueue();
         queue.addToQueue(item1);
         queue.addToQueue(item2);
 
-        // assert
+        // then
         assertNotNull(queue);
         assertEquals(queue.getLength(), 2);
 
+        // pop queue
         assertNotNull(queue.getNext());
 
         queue.removeFromQueue(item1);
@@ -71,15 +72,16 @@ public class SANetwork_DownloadQueue_Tests extends ApplicationTestCase<Applicati
         assertEquals(queue.getLength(), 1);
     }
 
-    @SmallTest
-    public void testErrors () {
+    @Test
+    public void test_SAFileQueue_WithNullFileItem () {
         // given
-        SAFileQueue queue = new SAFileQueue();
-
-        // then
         SAFileItem item = null;
+
+        // when
+        SAFileQueue queue = new SAFileQueue();
         queue.addToQueue(item);
 
+        // then
         assertNotNull(queue);
         assertEquals(queue.getLength(), 0);
         assertNull(queue.getNext());
