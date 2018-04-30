@@ -107,7 +107,6 @@
     <orderEntry type="library" name="support-vector-drawable-26.1.0" level="project" />
     <orderEntry type="library" name="support-core-utils-26.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="hamcrest-integration-1.1" level="project" />
-    <orderEntry type="library" name="json" level="project" />
     <orderEntry type="library" name="transition-26.1.0" level="project" />
     <orderEntry type="library" scope="TEST" name="jsr305-2.0.1" level="project" />
     <orderEntry type="library" name="support-compat-26.1.0" level="project" />
