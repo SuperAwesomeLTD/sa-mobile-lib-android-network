@@ -121,6 +121,7 @@ public class SAAsyncTask <T> {
         }
         // just catch the exception and call the error method in the listener
         catch (Exception e) {
+            Log.e("SuperAwesome", "Exception is " + e.getMessage());
             if (listener != null) {
                 listener.onError();
             }
@@ -191,7 +192,9 @@ public class SAAsyncTask <T> {
                 if (persister.listener != null) {
                     persister.result = persister.listener.taskToExecute();
                 }
-            }catch (Exception ignored) {}
+            }catch (Exception ignored) {
+                Log.e("SuperAwesome", "Exception is " + ignored.getMessage());
+            }
 
             // update data in persister store
             persisterHashMap.put(hash, persister);

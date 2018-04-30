@@ -11,6 +11,9 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,12 +33,28 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
+//
+        JSONObject object = new JSONObject();
+//        try {
+//            object.put("Content-Type", "application/json");
+//            object.put("User-Agent","Mozilla/5.0 (Linux; Android 4.4.4; SD4930UR Build/KTU84P) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/34.0.0.0 Mobile Safari/537.36");
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+
+        SANetwork network = new SANetwork();
+        network.sendGET(this, "https://ads.superawesome.tv/v2/ad/35684?test=false&sdkVersion=android_6.1.5&rnd=1385959&bundle=tv.superawesome.demoapp&name=SASDK+-+Android&dauid=251505879&ct=2&lang=en_US&device=phone", null, object, new SANetworkInterface() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void saDidGetResponse(int status, String payload, boolean success) {
+
             }
         });
     }
