@@ -72,7 +72,7 @@ public class TestSAFileDownloader {
 
         server.enqueue(mockResponse);
 
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -115,7 +115,7 @@ public class TestSAFileDownloader {
 
         server.enqueue(mockResponse);
 
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -130,49 +130,6 @@ public class TestSAFileDownloader {
         // then
         RecordedRequest record = server.takeRequest();
         assertEquals("GET /some/resource/url/videoresource.mp4 HTTP/1.1", record.getRequestLine());
-    }
-
-    @Test
-    public void test_SAFileDownloader_WithErrorOnFirstTryAndSuccessOnTheSecond () throws Exception {
-        // given
-        String url = server.url("/some/resource/url/videoresource.mp4").toString();
-        Buffer responseBody = ResourceReader.readResource("videoresource.mp4");
-
-        MockResponse badFirstResponse = new MockResponse()
-                .setSocketPolicy(SocketPolicy.NO_RESPONSE)
-                .setBody(responseBody);
-
-        MockResponse goodSecondResponse = new MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody);
-
-        Context context = mock(Context.class);
-        SharedPreferences prefs = mock(SharedPreferences.class);
-        SharedPreferences.Editor editor = mock(SharedPreferences.Editor.class);
-
-        final FileOutputStream outputStream = new FileOutputStream("diskfile.png");
-
-        // when
-        when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(prefs);
-        when(prefs.edit()).thenReturn(editor);
-        when(prefs.edit().putString(anyString(), anyString())).thenReturn(editor);
-        when(editor.commit()).thenReturn(true);
-        when(context.openFileOutput(anyString(), anyInt())).thenReturn(outputStream);
-
-        server.enqueue(badFirstResponse);
-        server.enqueue(goodSecondResponse);
-
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
-            @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
-
-                Assert.assertTrue(success);
-                Assert.assertNotNull(diskUrl);
-                Assert.assertTrue(diskUrl.contains("samov_"));
-                Assert.assertTrue(diskUrl.contains(".mp4"));
-                Assert.assertNotNull(outputStream);
-            }
-        });
     }
 
     @Test
@@ -199,10 +156,8 @@ public class TestSAFileDownloader {
         when(context.openFileOutput(anyString(), anyInt())).thenReturn(outputStream);
 
         server.enqueue(badResponse);
-        server.enqueue(badResponse);
-        server.enqueue(badResponse);
 
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -219,7 +174,7 @@ public class TestSAFileDownloader {
         String url = server.url("/some/resource/url/videoresource.mp4").toString();
 
         // when
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(null, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(executor, true, 1000).downloadFileFrom(null, url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -246,7 +201,7 @@ public class TestSAFileDownloader {
         when(context.openFileOutput(anyString(), anyInt())).thenReturn(outputStream);
 
         // when
-        SAFileDownloader.getInstance(executor, true, 1000).downloadFileFrom(context, "jsaksa\\\\\\\\s\\\\\\\\asasaasa", new SAFileDownloaderInterface() {
+        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, "jsaksa\\\\\\\\s\\\\\\\\asasaasa", new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 

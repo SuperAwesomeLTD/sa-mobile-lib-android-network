@@ -33,31 +33,18 @@ public class SAFileDownloader {
     private final String PREFERENCES = "MyPreferences";
 
     // private members needed to download a file
-    private SAFileQueue queue = new SAFileQueue();
-    private SAFileItem currentItem = null;
-    private boolean isDownloaderBusy = false;
     private boolean cleanupOnce = false;
-    private boolean printStart = false;
-    private boolean printQuarter = false;
-    private boolean printMid = false;
-    private boolean printThird = false;
-    private boolean printFull = false;
-
-    // Singleton instance
-    private static SAFileDownloader instance = new SAFileDownloader();
 
     // Executor
     private int timeout = 15000;
     private boolean isDebug = false;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    private Executor executor = null;
 
     /**
-     * Main singleton instance accessor method
-     *
-     * @return  the only instance of the SAFileDownloader object
+     * Classic constructor
      */
-    public static SAFileDownloader getInstance() {
-        return instance;
+    public SAFileDownloader() {
+        executor = Executors.newSingleThreadExecutor();
     }
 
     /**
@@ -65,11 +52,10 @@ public class SAFileDownloader {
      * @param executor executor to override
      * @return the only instance of the SAFileDownloader object
      */
-    public static SAFileDownloader getInstance(Executor executor, boolean isDebug, int timeout) {
-        instance.executor = executor;
-        instance.isDebug = isDebug;
-        instance.timeout = timeout;
-        return instance;
+    public SAFileDownloader(Executor executor, boolean isDebug, int timeout) {
+        this.executor = executor;
+        this.isDebug = isDebug;
+        this.timeout = timeout;
     }
 
     /**
@@ -81,7 +67,7 @@ public class SAFileDownloader {
      * @param listener1 instance of the SAFileDownloaderInterface interface, which acts as a
      *                  callback to the main thread for this method
      */
-    public void downloadFileFrom(Context context, String url, SAFileDownloaderInterface listener1) {
+    public void downloadFileFrom(final Context context, final String url, SAFileDownloaderInterface listener1) {
 
         // get a local copy of the listener
         final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void saDidDownloadFile(boolean success, String diskUrl) {}};
@@ -98,218 +84,111 @@ public class SAFileDownloader {
             cleanup(context);
         }
 
-        // if File is already in queue
-        if (queue.hasItemForURL(url)) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
 
-            // get the corresponding SAFileItem for the URL (which is the queue key)
-            SAFileItem item = queue.itemForURL(url);
+                final SAFileItem currentItem = new SAFileItem(url);
 
-            // check if it's already on disk
-            boolean isOnDisk = item != null && item.isOnDisk();
+                // get the disk URL and unique URL Key
+                String filename = currentItem.getDiskUrl();
+                String videoUrl = currentItem.getUrlKey();
 
-            // if the file is already on disk, just use the listener to respond with a
-            // successful callback (and thus save precious band with and speed up SDK
-            // saDidGetResponse times)
-            if (isOnDisk) {
-                listener.saDidDownloadFile(true, item.getDiskUrl());
-            }
-            // if file not already downloaded, add the current listener to the download item,
-            // so that when it does finish downloading, this listener also gets a
-            // corresponding callback
-            else {
-                if (item != null) {
-                    item.addResponse(listener);
-                }
-            }
+                // current success var (that's to be returned)
+                boolean success = true;
 
-        }
-        // if File is not already in queue
-        else {
+                // create streams
+                InputStream input = null;
+                OutputStream output = null;
+                HttpURLConnection connection = null;
 
-            // create a new download item
-            SAFileItem item = new SAFileItem(url, listener);
+                try {
+                    // start a new Http connection)
+                    URL url = new URL(videoUrl);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setReadTimeout(timeout);
+                    connection.setConnectTimeout(timeout);
+                    connection.connect();
 
-            // if the new item is valid (e.g. valid url, disk path, key, etc)
-            // then proceed with the operation
-            if (item.isValid()) {
-                // add the item to the queue
-                queue.addToQueue(item);
+                    int statusCode = connection.getResponseCode();
 
-                // check on queue
-                checkOnQueue(context);
-            }
-            // if it's not ok (e.g. invalid url) then use the listener to send an error callback
-            else {
-                listener.saDidDownloadFile(false, null);
-            }
-        }
-    }
+                    // exception code != 200
+                    if (statusCode != HttpURLConnection.HTTP_OK) return;
 
-    /**
-     * This is a private method that checks on the current queue and see if either the queue is
-     * ready to download something new or, if it's busy, to add the current item to be
-     * downloaded to the queue for later use.
-     *
-     * @param context   the current context (activity or fragment)
-     */
-    private void  checkOnQueue (final Context context) {
+                    // get input stream and start writing to disk
+                    input = connection.getInputStream();
+                    output = context.openFileOutput(filename, Context.MODE_PRIVATE);
 
-        // start the downloader only if the queue is not busy and it does have something in it
-        if (!isDownloaderBusy && queue.getLength() > 0) {
+                    int file_size = connection.getContentLength();
 
-            // current item will become the next item in the queue
-            currentItem = queue.getNext();
+                    // start the file download operation
+                    byte data[] = new byte[4096];
+                    long total = 0;
+                    int count;
+                    while ((count = input.read(data)) != -1) {
+                        total += count;
+                        int percent = (int) ((total / (float) file_size) * 100);
 
-            // if that current "next" item actually exists
-            if (currentItem != null) {
-
-                //
-                // Case 1:
-                // if this item can actually be downloaded (e.g. nr retries < MAX), then proceed
-                // with trying to download it
-                if (currentItem.hasRetriesRemaining()) {
-
-                    // reset these state vars to handle state
-                    isDownloaderBusy = true;
-                    printStart = printQuarter = printMid = printThird = printFull = false;
-
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            // get the disk URL and unique URL Key
-                            String filename = currentItem.getDiskUrl();
-                            String videoUrl = currentItem.getUrlKey();
-
-                            // current success var (that's to be returned)
-                            boolean success = true;
-
-                            // create streams
-                            InputStream input = null;
-                            OutputStream output = null;
-                            HttpURLConnection connection = null;
-
-                            try {
-                                // start a new Http connection)
-                                URL url = new URL(videoUrl);
-                                connection = (HttpURLConnection) url.openConnection();
-                                connection.setReadTimeout(timeout);
-                                connection.setConnectTimeout(timeout);
-                                connection.connect();
-
-                                int statusCode = connection.getResponseCode();
-
-                                // exception code != 200
-                                if (statusCode != HttpURLConnection.HTTP_OK) return;
-
-                                // get input stream and start writing to disk
-                                input = connection.getInputStream();
-                                output = context.openFileOutput(filename, Context.MODE_PRIVATE);
-
-                                int file_size = connection.getContentLength();
-
-                                // start the file download operation
-                                byte data[] = new byte[4096];
-                                int count;
-                                while ((count = input.read(data)) != -1) {
-                                    // actually write the data to the disk
-                                    output.write(data, 0, count);
-                                }
-
-                            } catch (Exception e) {
-                                success = false;
-                            }
-
-                            // try to close the whole connection
-                            try {
-                                if (output != null) output.close();
-                                if (input != null) input.close();
-                            } catch (IOException ignored) {
-                                // ignore
-                            }
-
-                            // disconnect
-                            if (connection != null) connection.disconnect();
-
-                            if (success) {
-
-                                // put data in the editor
-                                SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-                                preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).commit();
-
-                                // send saDidGetResponse to all of the listeners in the current item,
-                                // so that all class users who wanted to download the same file
-                                // now get their saDidGetResponse
-
-                                /*
-                                 * And try to return it on the main thread
-                                 */
-                                try {
-                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                                                listener.saDidDownloadFile(true, currentItem.getDiskUrl());
-                                            }
-                                        }
-                                    });
-                                }
-                                /*
-                                 * If the Main Looper is not present, as in a testing environment, still
-                                 * return the callback, but on the same thread.
-                                 */
-                                catch (Exception e) {
-                                    for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                                        listener.saDidDownloadFile(true, currentItem.getDiskUrl());
-                                    }
-                                }
-
-                                // set on disk
-                                currentItem.setOnDisk(true);
-
-                                // clear responses
-                                currentItem.clearResponses();
-
-                                // downloader not busy
-                                isDownloaderBusy = false;
-
-                                // check on queue
-                                checkOnQueue(context);
-
-                            } else {
-                                // handle the error case
-                                isDownloaderBusy = false;
-                                currentItem.incrementNrRetries();
-                                currentItem.setOnDisk(false);
-                                queue.moveToBackOfQueue(currentItem);
-                                checkOnQueue(context);
-                            }
-
+                        if (!isDebug && (percent % 25 == 0)) {
+                            Log.d("SuperAwesome", "Have written " +  percent + "% of file");
                         }
-                    });
-                }
-                //
-                // Case 2:
-                // If the item has no more retries, usually indicative of an unavailable
-                // network resource or an unconnected device, then just not do it any more
-                else {
 
-                    // send error events to all of the listeners of this download item so that
-                    // every class user who wanted to download this file knows there's a
-                    // problem
-                    for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                        listener.saDidDownloadFile(false, null);
+                        // actually write the data to the disk
+                        output.write(data, 0, count);
                     }
 
-                    // clear responses
-                    currentItem.clearResponses();
-
-                    // remove from queue
-                    queue.removeFromQueue(currentItem);
-
-                    // check again
-                    checkOnQueue(context);
+                } catch (Exception e) {
+                    success = false;
                 }
+
+                // try to close the whole connection
+                try {
+                    if (output != null) output.close();
+                    if (input != null) input.close();
+                } catch (IOException ignored) {
+                    // ignore
+                }
+
+                // disconnect
+                if (connection != null) connection.disconnect();
+
+                if (success) {
+
+                    // put data in the editor
+                    SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
+                    preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).commit();
+
+                    // send back
+                    sendBack(listener, true, currentItem.getDiskUrl());
+                }
+                else {
+                    sendBack(listener, false, null);
+                }
+            }
+        });
+    }
+
+    private void sendBack (final SAFileDownloaderInterface listener, final boolean success, final String diskUrl) {
+        /**
+         * And try to return it on the main thread
+         */
+        try {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    if (listener != null) {
+                        listener.saDidDownloadFile(success, diskUrl);
+                    }
+                }
+            });
+        }
+        /**
+         * If the Main Looper is not present, as in a testing environment, still
+         * return the callback, but on the same thread.
+         */
+        catch (Exception e) {
+            if (listener != null) {
+                listener.saDidDownloadFile(success, diskUrl);
             }
         }
     }
@@ -340,6 +219,9 @@ public class SAFileDownloader {
                     boolean hasBeenDeleted = false;
                     if (file.exists()) {
                         hasBeenDeleted = file.delete();
+                        if (!isDebug) {
+                            Log.d("SuperAwesome", "Deleted " + filename);
+                        }
                     }
 
                     // remove the key from the shared preferences as well

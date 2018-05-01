@@ -5,7 +5,6 @@ import org.junit.runners.Suite;
 
 import tv.superawesome.lib.sanetwork.file.TestSAFileDownloader;
 import tv.superawesome.lib.sanetwork.file.TestSAFileItem;
-import tv.superawesome.lib.sanetwork.file.TestSAFileQueue;
 import tv.superawesome.lib.sanetwork.request.TestSANetwork;
 import tv.superawesome.lib.sanetwork.request.TestSANetworkUtils;
 
@@ -15,7 +14,6 @@ import tv.superawesome.lib.sanetwork.request.TestSANetworkUtils;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         TestSAFileItem.class,
-        TestSAFileQueue.class,
         TestSANetwork.class,
         TestSAFileDownloader.class,
         TestSANetworkUtils.class
