@@ -4,6 +4,10 @@
  */
 package tv.superawesome.lib.sanetwork.request;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
@@ -249,22 +253,41 @@ public class SANetwork {
                     }
 
                     if (statusCode < HttpsURLConnection.HTTP_BAD_REQUEST && response != null) {
-                        if (listener != null) {
-                            listener.saDidGetResponse(statusCode, response, true);
-                        }
+                        sendBack(listener, statusCode, response, true);
                     }
                     else {
-                        if (listener != null) {
-                            listener.saDidGetResponse(statusCode, null, false);
-                        }
+                        sendBack(listener, statusCode, null, false);
                     }
 
                 } catch (Exception e) {
-                    if (listener != null) {
-                        listener.saDidGetResponse(0, null, false);
-                    }
+                    sendBack(listener, 0, null, false);
                 }
             }
         });
+    }
+
+    private void sendBack (final SANetworkInterface listener, final int status, final String response, final boolean success) {
+        /**
+         * And try to return it on the main thread
+         */
+        try {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    if (listener != null) {
+                        listener.saDidGetResponse(status, response, success);
+                    }
+                }
+            });
+        }
+        /**
+         * If the Main Looper is not present, as in a testing environment, still
+         * return the callback, but on the same thread.
+         */
+        catch (Exception e) {
+            if (listener != null) {
+                listener.saDidGetResponse(status, response, success);
+            }
+        }
     }
 }
