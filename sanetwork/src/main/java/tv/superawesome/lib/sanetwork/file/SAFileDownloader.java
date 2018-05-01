@@ -6,6 +6,8 @@ package tv.superawesome.lib.sanetwork.file;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.File;
@@ -238,8 +240,28 @@ public class SAFileDownloader {
                                 // send saDidGetResponse to all of the listeners in the current item,
                                 // so that all class users who wanted to download the same file
                                 // now get their saDidGetResponse
-                                for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
-                                    listener.saDidDownloadFile(true, currentItem.getDiskUrl());
+
+                                /*
+                                 * And try to return it on the main thread
+                                 */
+                                try {
+                                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
+                                                listener.saDidDownloadFile(true, currentItem.getDiskUrl());
+                                            }
+                                        }
+                                    });
+                                }
+                                /*
+                                 * If the Main Looper is not present, as in a testing environment, still
+                                 * return the callback, but on the same thread.
+                                 */
+                                catch (Exception e) {
+                                    for (SAFileDownloaderInterface listener : currentItem.getResponses()) {
+                                        listener.saDidDownloadFile(true, currentItem.getDiskUrl());
+                                    }
                                 }
 
                                 // set on disk
