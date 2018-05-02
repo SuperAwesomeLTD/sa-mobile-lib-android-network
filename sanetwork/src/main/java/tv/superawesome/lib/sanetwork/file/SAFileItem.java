@@ -4,9 +4,15 @@
  */
 package tv.superawesome.lib.sanetwork.file;
 
+import android.util.Log;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executor;
 
 /**
  * This class represents a single File Item - an object that tries to group two pieces of
@@ -20,16 +26,13 @@ public class SAFileItem {
 
     // private constants
     private static final String SA_KEY_PREFIX = "sasdkkey_";
-    private static final short MAX_RETRIES = 3;
 
     // private member functions
+    private URL resourceURL = null;
     private String urlKey = null;
     private String key = null;
     private String diskName = null;
     private String diskUrl = null;
-    private boolean isOnDisk = false;
-    private int nrRetries = 0;
-    private List<SAFileDownloaderInterface> responses = new ArrayList<>();
 
     /**
      * Empty Item constructor
@@ -48,62 +51,13 @@ public class SAFileItem {
         // get the URL Key
         urlKey = url;
 
-        // get the disk name
-        if (urlKey != null) {
-            diskName = getNewDiskName(url);
-            diskUrl = diskName;
+        try {
+            resourceURL = new URL(url);
+            diskName = fileNameOf(url);
             key = getKeyForDiskName(diskName);
-        }
-    }
-
-    /**
-     * Constructor that takes a single URL parameter and from there creates the
-     * associated disk name, disk url and key and also adds the first listener to the responses
-     * array
-     *
-     * @param url           a remote resource URL
-     * @param firstListener a first listener used for callback
-     */
-    public SAFileItem(String url, SAFileDownloaderInterface firstListener) {
-        // call URL constructor
-        this (url);
-
-        // add saDidGetResponse
-        addResponse(firstListener);
-    }
-
-
-    /**
-     * Increment the nr of retries this download item can use
-     */
-    public void incrementNrRetries () {
-        nrRetries++;
-    }
-
-    /**
-     * Check to see if the retries condition is implemented
-     *
-     * @return true or false depending on the condition
-     */
-    public boolean hasRetriesRemaining () {
-        return nrRetries < MAX_RETRIES;
-    }
-
-    /**
-     * Clear the responses array
-     */
-    public void clearResponses () {
-        responses.clear();
-    }
-
-    /**
-     * Add a new saDidGetResponse to the responses array (if not null)
-     *
-     * @param listener add a new listener for callback, only if its non-null
-     */
-    public void addResponse (SAFileDownloaderInterface listener) {
-        if (listener != null) {
-            responses.add(listener);
+            diskUrl = diskName;
+        } catch (Exception e) {
+            // do nothing
         }
     }
 
@@ -114,39 +68,6 @@ public class SAFileItem {
      */
     public boolean isValid () {
         return urlKey != null && diskName != null && diskUrl != null && key != null;
-    }
-
-    /**
-     * Get the file extension from a file name
-     *
-     * @param fileName  a valid, hopefully not-null filename
-     * @return          the 3-4 letter extension of the file
-     */
-    private String getFileExt(String fileName) {
-        if (fileName != null && !fileName.isEmpty()) {
-            return fileName.substring(fileName.lastIndexOf(".") + 1, fileName.length());
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Generate a new disk name based on an url's extension
-     *
-     * @param url   url to pass to get the extension from
-     * @return      a new disk name
-     */
-    private String getNewDiskName(String url) {
-        if (url != null && !url.isEmpty()) {
-            String extension = getFileExt(url);
-            if (extension != null && !extension.isEmpty()) {
-                return "samov_" + new Random().nextInt(65548) + "." + extension;
-            } else {
-                return null;
-            }
-        }else {
-            return null;
-        }
     }
 
     /**
@@ -164,15 +85,6 @@ public class SAFileItem {
     }
 
     /**
-     * Setter for isOnDisk member var
-     *
-     * @param onDisk new value to override
-     */
-    public void setOnDisk(boolean onDisk) {
-        isOnDisk = onDisk;
-    }
-
-    /**
      * Setter for the url key member var
      *
      * @param urlKey new value to override
@@ -182,57 +94,12 @@ public class SAFileItem {
     }
 
     /**
-     * Setter for the key parameter
-     *
-     * @param key new value to override
-     */
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    /**
-     * Setter for the disk name
-     *
-     * @param diskName new value to override
-     */
-    public void setDiskName(String diskName) {
-        this.diskName = diskName;
-    }
-
-    /**
      * Setter for the disk url
      *
      * @param diskUrl new value to override
      */
     public void setDiskUrl(String diskUrl) {
         this.diskUrl = diskUrl;
-    }
-
-    /**
-     * Getter for the responses (listeners) array
-     *
-     * @return the whole responses array as a List of SAFileDownloaderInterface
-     */
-    public List<SAFileDownloaderInterface> getResponses() {
-        return responses;
-    }
-
-    /**
-     * Get the current nr of retries for this download item
-     *
-     * @return the current state of the "nrRetries" member variable
-     */
-    public int getNrRetries() {
-        return nrRetries;
-    }
-
-    /**
-     * Get the current status of the file being on disk
-     *
-     * @return the current state of the "isOnDisk" member variable
-     */
-    public boolean isOnDisk() {
-        return isOnDisk;
     }
 
     /**
@@ -269,5 +136,19 @@ public class SAFileItem {
      */
     public String getUrlKey() {
         return urlKey;
+    }
+
+    private String fileNameOf (String url) {
+        try {
+            URI uri = new URI(url);
+            String[] segments = uri.getPath().split("/");
+            return segments[segments.length-1];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public URL getResourceURL() {
+        return resourceURL;
     }
 }

@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -30,12 +29,10 @@ import java.util.concurrent.Executors;
 public class SAFileDownloader {
 
     // constants
-    private final String PREFERENCES = "MyPreferences";
-
-    // private members needed to download a file
-    private boolean cleanupOnce = false;
+    private static final String PREFERENCES = "MyPreferences";
 
     // Executor
+    private Context context = null;
     private int timeout = 15000;
     private boolean isDebug = false;
     private Executor executor = null;
@@ -43,16 +40,17 @@ public class SAFileDownloader {
     /**
      * Classic constructor
      */
-    public SAFileDownloader() {
+    public SAFileDownloader(Context context) {
+        this.context = context;
         executor = Executors.newSingleThreadExecutor();
     }
 
     /**
      * Other singleton, with an executor passes as param
      * @param executor executor to override
-     * @return the only instance of the SAFileDownloader object
      */
-    public SAFileDownloader(Executor executor, boolean isDebug, int timeout) {
+    public SAFileDownloader(Context context, Executor executor, boolean isDebug, int timeout) {
+        this.context = context;
         this.executor = executor;
         this.isDebug = isDebug;
         this.timeout = timeout;
@@ -67,7 +65,7 @@ public class SAFileDownloader {
      * @param listener1 instance of the SAFileDownloaderInterface interface, which acts as a
      *                  callback to the main thread for this method
      */
-    public void downloadFileFrom(final Context context, final String url, SAFileDownloaderInterface listener1) {
+    public void downloadFileFrom(final String url, SAFileDownloaderInterface listener1) {
 
         // get a local copy of the listener
         final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void saDidDownloadFile(boolean success, String diskUrl) {}};
@@ -78,21 +76,22 @@ public class SAFileDownloader {
             return;
         }
 
-        // cleanup the disk cache once!
-        if (!cleanupOnce && !isDebug) {
-            cleanupOnce = true;
-            cleanup(context);
+        final SAFileItem currentItem = new SAFileItem(url);
+
+        try {
+            File file = new File(context.getFilesDir(), currentItem.getDiskName());
+
+            if (file.exists()) {
+                sendBack(listener, true, currentItem.getDiskUrl());
+                return;
+            }
+        } catch (Exception e) {
+            // do nothing
         }
 
         executor.execute(new Runnable() {
             @Override
             public void run() {
-
-                final SAFileItem currentItem = new SAFileItem(url);
-
-                // get the disk URL and unique URL Key
-                String filename = currentItem.getDiskUrl();
-                String videoUrl = currentItem.getUrlKey();
 
                 // current success var (that's to be returned)
                 boolean success = true;
@@ -104,8 +103,7 @@ public class SAFileDownloader {
 
                 try {
                     // start a new Http connection)
-                    URL url = new URL(videoUrl);
-                    connection = (HttpURLConnection) url.openConnection();
+                    connection = (HttpURLConnection) currentItem.getResourceURL().openConnection();
                     connection.setReadTimeout(timeout);
                     connection.setConnectTimeout(timeout);
                     connection.connect();
@@ -117,7 +115,7 @@ public class SAFileDownloader {
 
                     // get input stream and start writing to disk
                     input = connection.getInputStream();
-                    output = context.openFileOutput(filename, Context.MODE_PRIVATE);
+                    output = context.openFileOutput(currentItem.getDiskUrl(), Context.MODE_PRIVATE);
 
                     int file_size = connection.getContentLength();
 
@@ -200,7 +198,11 @@ public class SAFileDownloader {
      *
      * @param context the current context (activity or fragment)
      */
-    private void cleanup (Context context) {
+    private static void cleanup (Context context) {
+
+        if (context == null) {
+            return;
+        }
 
         // get current preferences
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
@@ -219,13 +221,10 @@ public class SAFileDownloader {
                     boolean hasBeenDeleted = false;
                     if (file.exists()) {
                         hasBeenDeleted = file.delete();
-                        if (!isDebug) {
-                            Log.d("SuperAwesome", "Deleted " + filename);
-                        }
                     }
 
                     // remove the key from the shared preferences as well
-                    preferences.edit().remove(key).apply();
+                    preferences.edit().remove(key).commit();
                 }
 
             } catch (ClassCastException e) {
@@ -234,6 +233,6 @@ public class SAFileDownloader {
         }
 
         // apply
-        preferences.edit().apply();
+        preferences.edit().commit();
     }
 }

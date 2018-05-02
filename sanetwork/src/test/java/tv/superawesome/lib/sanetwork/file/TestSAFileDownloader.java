@@ -22,6 +22,7 @@ import tv.superawesome.lib.sanetwork.testutils.ResourceReader;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -72,14 +73,13 @@ public class TestSAFileDownloader {
 
         server.enqueue(mockResponse);
 
-        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
                 Assert.assertTrue(success);
                 Assert.assertNotNull(diskUrl);
-                Assert.assertTrue(diskUrl.contains("samov_"));
-                Assert.assertTrue(diskUrl.contains(".png"));
+                Assert.assertEquals("pngresource.png", diskUrl);
                 Assert.assertNotNull(outputStream);
 
             }
@@ -115,14 +115,13 @@ public class TestSAFileDownloader {
 
         server.enqueue(mockResponse);
 
-        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
                 Assert.assertTrue(success);
                 Assert.assertNotNull(diskUrl);
-                Assert.assertTrue(diskUrl.contains("samov_"));
-                Assert.assertTrue(diskUrl.contains(".mp4"));
+                Assert.assertEquals("videoresource.mp4", diskUrl);
                 Assert.assertNotNull(outputStream);
             }
         });
@@ -157,7 +156,7 @@ public class TestSAFileDownloader {
 
         server.enqueue(badResponse);
 
-        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -174,7 +173,7 @@ public class TestSAFileDownloader {
         String url = server.url("/some/resource/url/videoresource.mp4").toString();
 
         // when
-        new SAFileDownloader(executor, true, 1000).downloadFileFrom(null, url, new SAFileDownloaderInterface() {
+        new SAFileDownloader(null, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
@@ -201,7 +200,7 @@ public class TestSAFileDownloader {
         when(context.openFileOutput(anyString(), anyInt())).thenReturn(outputStream);
 
         // when
-        new SAFileDownloader(executor, true, 1000).downloadFileFrom(context, "jsaksa\\\\\\\\s\\\\\\\\asasaasa", new SAFileDownloaderInterface() {
+        new SAFileDownloader(context, executor, true, 1000).downloadFileFrom("jsaksa\\\\\\\\s\\\\\\\\asasaasa", new SAFileDownloaderInterface() {
             @Override
             public void saDidDownloadFile(boolean success, String diskUrl) {
 
