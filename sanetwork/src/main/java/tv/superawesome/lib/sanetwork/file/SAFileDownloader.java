@@ -221,6 +221,7 @@ public class SAFileDownloader {
                     boolean hasBeenDeleted = false;
                     if (file.exists()) {
                         hasBeenDeleted = file.delete();
+                        Log.d("SuperAwesome", "Have deleted " + filename + " ==> " + hasBeenDeleted);
                     }
 
                     // remove the key from the shared preferences as well

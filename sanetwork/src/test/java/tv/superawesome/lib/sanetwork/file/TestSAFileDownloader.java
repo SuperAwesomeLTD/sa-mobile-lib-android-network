@@ -79,9 +79,9 @@ public class TestSAFileDownloader {
 
                 Assert.assertTrue(success);
                 Assert.assertNotNull(filePath);
+                Assert.assertEquals("sasdkkey__pngresource.png", key);
                 Assert.assertEquals("pngresource.png", filePath);
                 Assert.assertNotNull(outputStream);
-
             }
         });
 
@@ -121,6 +121,7 @@ public class TestSAFileDownloader {
 
                 Assert.assertTrue(success);
                 Assert.assertNotNull(filePath);
+                Assert.assertEquals("sasdkkey__videoresource.mp4", key);
                 Assert.assertEquals("videoresource.mp4", filePath);
                 Assert.assertNotNull(outputStream);
             }
@@ -132,7 +133,7 @@ public class TestSAFileDownloader {
     }
 
     @Test
-    public void test_SAFileDownloader_WithErrorOnAllRetries () throws Exception {
+    public void test_SAFileDownloader_WithTimeoutError () throws Exception {
         // given
         String url = server.url("/some/resource/url/videoresource.mp4").toString();
         Buffer responseBody = ResourceReader.readResource("videoresource.mp4");
@@ -161,6 +162,7 @@ public class TestSAFileDownloader {
             public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
+                Assert.assertNull(key);
                 Assert.assertNull(filePath);
                 Assert.assertNotNull(outputStream);
             }
@@ -178,6 +180,7 @@ public class TestSAFileDownloader {
             public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
+                Assert.assertNull(key);
                 Assert.assertNull(filePath);
             }
         });
@@ -205,6 +208,7 @@ public class TestSAFileDownloader {
             public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
+                Assert.assertNull(key);
                 Assert.assertNull(filePath);
             }
         });
