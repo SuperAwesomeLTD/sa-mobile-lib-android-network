@@ -15,8 +15,9 @@ public interface SAFileDownloaderInterface {
      * and the location on the disk where the file has been downloader
      *
      * @param success   Whether the network operation to get the file was a success
-     * @param diskUrl   The Disk URL of the recently downloaded file
+     * @param key       the saved key
+     * @param filePath  The Disk URL of the recently downloaded file
      */
-    void saDidDownloadFile(boolean success, String diskUrl);
+    void saDidDownloadFile(boolean success, String key, String filePath);
 
 }

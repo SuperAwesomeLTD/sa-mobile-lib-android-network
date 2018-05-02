@@ -68,21 +68,21 @@ public class SAFileDownloader {
     public void downloadFileFrom(final String url, SAFileDownloaderInterface listener1) {
 
         // get a local copy of the listener
-        final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void saDidDownloadFile(boolean success, String diskUrl) {}};
+        final SAFileDownloaderInterface listener = listener1 != null ? listener1 : new SAFileDownloaderInterface() {@Override public void saDidDownloadFile(boolean success, String key, String filePath) {}};
 
         // check for null context
         if (context == null) {
-            listener.saDidDownloadFile(false, null);
+            listener.saDidDownloadFile(false, null, null);
             return;
         }
 
         final SAFileItem currentItem = new SAFileItem(url);
 
         try {
-            File file = new File(context.getFilesDir(), currentItem.getDiskName());
+            File file = new File(context.getFilesDir(), currentItem.getFileName());
 
             if (file.exists()) {
-                sendBack(listener, true, currentItem.getDiskUrl());
+                sendBack(listener, true, currentItem.getKey(), currentItem.getFilePath());
                 return;
             }
         } catch (Exception e) {
@@ -103,7 +103,7 @@ public class SAFileDownloader {
 
                 try {
                     // start a new Http connection)
-                    connection = (HttpURLConnection) currentItem.getResourceURL().openConnection();
+                    connection = (HttpURLConnection) currentItem.getUrl().openConnection();
                     connection.setReadTimeout(timeout);
                     connection.setConnectTimeout(timeout);
                     connection.connect();
@@ -115,7 +115,7 @@ public class SAFileDownloader {
 
                     // get input stream and start writing to disk
                     input = connection.getInputStream();
-                    output = context.openFileOutput(currentItem.getDiskUrl(), Context.MODE_PRIVATE);
+                    output = context.openFileOutput(currentItem.getFilePath(), Context.MODE_PRIVATE);
 
                     int file_size = connection.getContentLength();
 
@@ -154,19 +154,19 @@ public class SAFileDownloader {
 
                     // put data in the editor
                     SharedPreferences preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
-                    preferences.edit().putString(currentItem.getKey(), currentItem.getDiskUrl()).commit();
+                    preferences.edit().putString(currentItem.getKey(), currentItem.getFilePath()).commit();
 
                     // send back
-                    sendBack(listener, true, currentItem.getDiskUrl());
+                    sendBack(listener, true, currentItem.getKey(), currentItem.getFilePath());
                 }
                 else {
-                    sendBack(listener, false, null);
+                    sendBack(listener, false, null, null);
                 }
             }
         });
     }
 
-    private void sendBack (final SAFileDownloaderInterface listener, final boolean success, final String diskUrl) {
+    private void sendBack (final SAFileDownloaderInterface listener, final boolean success, final String key, final String diskUrl) {
         /**
          * And try to return it on the main thread
          */
@@ -175,7 +175,7 @@ public class SAFileDownloader {
                 @Override
                 public void run() {
                     if (listener != null) {
-                        listener.saDidDownloadFile(success, diskUrl);
+                        listener.saDidDownloadFile(success, key, diskUrl);
                     }
                 }
             });
@@ -186,7 +186,7 @@ public class SAFileDownloader {
          */
         catch (Exception e) {
             if (listener != null) {
-                listener.saDidDownloadFile(success, diskUrl);
+                listener.saDidDownloadFile(success, key, diskUrl);
             }
         }
     }
@@ -198,7 +198,7 @@ public class SAFileDownloader {
      *
      * @param context the current context (activity or fragment)
      */
-    private static void cleanup (Context context) {
+    public static void cleanup (Context context) {
 
         if (context == null) {
             return;

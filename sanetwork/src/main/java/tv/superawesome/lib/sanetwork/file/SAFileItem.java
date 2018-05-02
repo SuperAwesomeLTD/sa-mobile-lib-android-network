@@ -4,15 +4,8 @@
  */
 package tv.superawesome.lib.sanetwork.file;
 
-import android.util.Log;
-
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Executor;
 
 /**
  * This class represents a single File Item - an object that tries to group two pieces of
@@ -28,11 +21,10 @@ public class SAFileItem {
     private static final String SA_KEY_PREFIX = "sasdkkey_";
 
     // private member functions
-    private URL resourceURL = null;
-    private String urlKey = null;
+    private URL    url = null;
     private String key = null;
-    private String diskName = null;
-    private String diskUrl = null;
+    private String fileName = null;
+    private String filePath = null;
 
     /**
      * Empty Item constructor
@@ -48,14 +40,11 @@ public class SAFileItem {
      * @param url   a remote resource URL
      */
     public SAFileItem(String url) {
-        // get the URL Key
-        urlKey = url;
-
         try {
-            resourceURL = new URL(url);
-            diskName = fileNameOf(url);
-            key = getKeyForDiskName(diskName);
-            diskUrl = diskName;
+            this.url = new URL(url);
+            fileName = fileNameOf(url);
+            filePath = fileName;
+            key = getKeyForDiskName(fileName);
         } catch (Exception e) {
             // do nothing
         }
@@ -67,7 +56,7 @@ public class SAFileItem {
      * @return true or false based on the condition
      */
     public boolean isValid () {
-        return urlKey != null && diskName != null && diskUrl != null && key != null;
+        return url != null && fileName != null && filePath != null && key != null;
     }
 
     /**
@@ -77,65 +66,7 @@ public class SAFileItem {
      * @return a new key
      */
     private String getKeyForDiskName(String diskName) {
-        if (diskName != null && !diskName.isEmpty()) {
-            return SA_KEY_PREFIX + "_" + diskName;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Setter for the url key member var
-     *
-     * @param urlKey new value to override
-     */
-    public void setUrlKey(String urlKey) {
-        this.urlKey = urlKey;
-    }
-
-    /**
-     * Setter for the disk url
-     *
-     * @param diskUrl new value to override
-     */
-    public void setDiskUrl(String diskUrl) {
-        this.diskUrl = diskUrl;
-    }
-
-    /**
-     * Get the current disk url
-     *
-     * @return the current state of the "diskUrl" member variable
-     */
-    public String getDiskUrl() {
-        return diskUrl;
-    }
-
-    /**
-     * Get the current disk name
-     *
-     * @return the current state of the "diskName" member variable
-     */
-    public String getDiskName() {
-        return diskName;
-    }
-
-    /**
-     * Get the current key
-     *
-     * @return the current state of the "key" member variable
-     */
-    public String getKey() {
-        return key;
-    }
-
-    /**
-     * Get the current url key
-     *
-     * @return the current state of the "urlKey" member variable
-     */
-    public String getUrlKey() {
-        return urlKey;
+        return SA_KEY_PREFIX + "_" + diskName;
     }
 
     private String fileNameOf (String url) {
@@ -148,7 +79,19 @@ public class SAFileItem {
         }
     }
 
-    public URL getResourceURL() {
-        return resourceURL;
+    public URL getUrl() {
+        return url;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getFilePath() {
+        return filePath;
     }
 }

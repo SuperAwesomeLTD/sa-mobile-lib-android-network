@@ -23,15 +23,15 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertNull(item.getUrlKey());
-        assertNull(item.getDiskName());
-        assertNull(item.getDiskUrl());
+        assertNull(item.getUrl());
+        assertNull(item.getFileName());
+        assertNull(item.getFilePath());
         assertNull(item.getKey());
         assertFalse(item.isValid());
     }
 
     @Test
-    public void test_SAFileItem_WithValidMP4Url () {
+    public void test_SAFileItem_WithValidUrl () {
         // given
         String url = "https://sa-beta-ads-video-transcoded-superawesome.netdna-ssl.com/5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4";
 
@@ -40,27 +40,18 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertEquals(item.getUrlKey(), url);
-        assertNotNull(item.getDiskName());
-        assertNotNull(item.getDiskUrl());
+
+        assertNotNull(item.getUrl());
+
+        assertNotNull(item.getFileName());
+        assertEquals("5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4", item.getFileName());
+
+        assertNotNull(item.getFilePath());
+        assertEquals("5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4", item.getFilePath());
+
         assertNotNull(item.getKey());
-        assertTrue(item.isValid());
-    }
+        assertEquals("sasdkkey__5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4", item.getKey());
 
-    @Test
-    public void test_SAFileItem_WithValidPNGUrl () {
-        // given
-        String url = "https://s3-eu-west-1.amazonaws.com/sb-ads-uploads/images/VNyy2KSeGrvC0eO7DDOxMfWm2GQKuJ6X.png";
-
-        // when
-        SAFileItem item = new SAFileItem(url);
-
-        // then
-        assertNotNull(item);
-        assertEquals(item.getUrlKey(), url);
-        assertNotNull(item.getDiskName());
-        assertNotNull(item.getDiskUrl());
-        assertNotNull(item.getKey());
         assertTrue(item.isValid());
     }
 
@@ -74,8 +65,9 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertNull(item.getDiskName());
-        assertNull(item.getDiskUrl());
+        assertNull(item.getUrl());
+        assertNull(item.getFileName());
+        assertNull(item.getFilePath());
         assertNull(item.getKey());
         assertFalse(item.isValid());
     }
@@ -90,8 +82,9 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertNull(item.getDiskName());
-        assertNull(item.getDiskUrl());
+        assertNull(item.getUrl());
+        assertNull(item.getFileName());
+        assertNull(item.getFilePath());
         assertNull(item.getKey());
         assertFalse(item.isValid());
     }
@@ -106,8 +99,9 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertNull(item.getDiskName());
-        assertNull(item.getDiskUrl());
+        assertNull(item.getUrl());
+        assertNull(item.getFileName());
+        assertNull(item.getFilePath());
         assertNull(item.getKey());
         assertFalse(item.isValid());
     }
@@ -122,29 +116,10 @@ public class TestSAFileItem {
 
         // then
         assertNotNull(item);
-        assertNull(item.getDiskName());
-        assertNull(item.getDiskUrl());
+        assertNull(item.getUrl());
+        assertNull(item.getFileName());
+        assertNull(item.getFilePath());
         assertNull(item.getKey());
         assertFalse(item.isValid());
-    }
-
-    @Test
-    public void test_SAFileItem_WithUrlAndDiskKey () {
-        // given
-        String urlKey = "https://sa-beta-ads-video-transcoded-superawesome.netdna-ssl.com/5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4";
-        String diskUrl = "testfile.mp4";
-
-        // when
-        SAFileItem item = new SAFileItem();
-        item.setUrlKey(urlKey);
-        item.setDiskUrl(diskUrl);
-
-        // then
-        String expectedUrlKey = "https://sa-beta-ads-video-transcoded-superawesome.netdna-ssl.com/5E827ejOz2QYaRWqyJpn15r1NyvInPy9.mp4";
-        String expectedDiskUrl = "testfile.mp4";
-
-        assertNotNull(item);
-        assertEquals(item.getUrlKey(), expectedUrlKey);
-        assertEquals(item.getDiskUrl(), expectedDiskUrl);
     }
 }

@@ -75,11 +75,11 @@ public class TestSAFileDownloader {
 
         new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertTrue(success);
-                Assert.assertNotNull(diskUrl);
-                Assert.assertEquals("pngresource.png", diskUrl);
+                Assert.assertNotNull(filePath);
+                Assert.assertEquals("pngresource.png", filePath);
                 Assert.assertNotNull(outputStream);
 
             }
@@ -117,11 +117,11 @@ public class TestSAFileDownloader {
 
         new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertTrue(success);
-                Assert.assertNotNull(diskUrl);
-                Assert.assertEquals("videoresource.mp4", diskUrl);
+                Assert.assertNotNull(filePath);
+                Assert.assertEquals("videoresource.mp4", filePath);
                 Assert.assertNotNull(outputStream);
             }
         });
@@ -158,10 +158,10 @@ public class TestSAFileDownloader {
 
         new SAFileDownloader(context, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
-                Assert.assertNull(diskUrl);
+                Assert.assertNull(filePath);
                 Assert.assertNotNull(outputStream);
             }
         });
@@ -175,10 +175,10 @@ public class TestSAFileDownloader {
         // when
         new SAFileDownloader(null, executor, true, 1000).downloadFileFrom(url, new SAFileDownloaderInterface() {
             @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
-                Assert.assertNull(diskUrl);
+                Assert.assertNull(filePath);
             }
         });
     }
@@ -202,10 +202,10 @@ public class TestSAFileDownloader {
         // when
         new SAFileDownloader(context, executor, true, 1000).downloadFileFrom("jsaksa\\\\\\\\s\\\\\\\\asasaasa", new SAFileDownloaderInterface() {
             @Override
-            public void saDidDownloadFile(boolean success, String diskUrl) {
+            public void saDidDownloadFile(boolean success, String key, String filePath) {
 
                 Assert.assertFalse(success);
-                Assert.assertNull(diskUrl);
+                Assert.assertNull(filePath);
             }
         });
     }
