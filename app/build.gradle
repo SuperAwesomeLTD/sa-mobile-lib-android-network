@@ -28,13 +28,13 @@ repositories {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    compile 'com.android.support:design:26.1.0'
+    implementation 'com.android.support:design:26.1.0'
 
-    compile project(':sanetwork')
-    compile 'tv.superawesome.lib.sajsonparser:sajsonparser:0.2.7'
-    androidTestCompile 'com.android.support.test:testing-support-lib:0.1'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.0'
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
+    implementation project(':sanetwork')
+    implementation 'tv.superawesome.lib.sajsonparser:sajsonparser:0.2.7'
+    androidTestImplementation 'com.android.support.test:testing-support-lib:0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.0'
 }
